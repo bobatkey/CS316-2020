@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
-module Week1 where
+module Week01 where
 
-import Prelude hiding (take, drop, Left, Right, Maybe (..), reverse,length)
+import Prelude hiding (take, drop, Left, Right, Maybe (..), reverse, length)
 
 {- CS316 2020/21 : Week 1
 
@@ -110,7 +110,7 @@ whereIsTheFloor = Down
 
 {- Making definitions like this is not very useful by itself. All we can
    do is give names to existing pieces of data. More usefully, we can
-   define /functions/ that transform data.
+   define functions that transform data.
 
    Roughly speaking, a function in Haskell takes in some data, looks
    at it to decide what to do, and then returns some new data.
@@ -126,8 +126,8 @@ flipVertically Right = Right
 
 {- This definition looks more complex, but is similar to the previous
    ones. The first line tells us (and the Haskell compiler) what type
-   'flipVertically' has. In this case it is a /function/ type
-   'Direction -> Direction', meaning that it is a function that takes
+   'flipVertically' has. In this case it is a function type 'Direction
+   -> Direction', meaning that it is a function that takes
    'Direction's as input, and returns 'Direction's as output.
 
    The other four lines define what happens for each of the four
@@ -183,6 +183,8 @@ equalDirection _     _     = False
    3. Define isClockwiseOf
 -}
 
+-- Solutions
+
 flipHorizontally :: Direction -> Direction
 flipHorizontally Up = Up
 flipHorizontally Down = Down
@@ -204,16 +206,34 @@ isClockwiseOf _     _     = False
 
 {-     PART 2 : STRUCTURED DATA
 
+   We have seen how to define a datatype that consist of several
+   options: a Direction can be any of Up, Down, Left, or Right. But
+   what if we want to represent how far up, down, left or right?
 
+   To solve this problem, datatypes can also have additional data
+   attached to each constructor. We do this by writing the types of
+   the data we want to attach after the constructor name in the 'data'
+   declaration.
+
+   Here is an example that defines a datatype called
+   'DirectionWithDistance'. It has the same number of constructors as
+   'Direction', but now they all have an 'Integer' attached.
 -}
 
 data DirectionWithDistance
-  = UpD    Int
-  | DownD  Int
-  | LeftD  Int
-  | RightD Int
+  = UpD    Integer
+  | DownD  Integer
+  | LeftD  Integer
+  | RightD Integer
   deriving Show
 
+{- FIXME: How to type in values of type DirectionWithDistance -}
+
+getDistance :: DirectionWithDistance -> Integer
+getDistance (UpD dist)    = dist
+getDistance (DownD dist)  = dist
+getDistance (LeftD dist)  = dist
+getDistance (RightD dist) = dist
 
 
 data PairOfDirections
@@ -267,7 +287,7 @@ data Maybe a
         swap :: Pair a b -> Pair b a
         swap (Pair a b) = Pair b a
 
-   3.
+   3. Rewrite DirectionWithDistance using Pair.
 
 -}
 
@@ -313,6 +333,11 @@ drop n []       = []
    1. Write a function 'dropSpaces' :: [Char] -> [Char] that drops
    spaces from the start of a list of characters.
 -}
+
+dropSpaces :: [Char] -> [Char]
+dropSpaces []       = []
+dropSpaces (' ':xs) = dropSpaces xs
+dropSpaces (x:xs)   = x : dropSpaces xs
 
 {-     PART 5 : APPENDING AND REVERSING -}
 

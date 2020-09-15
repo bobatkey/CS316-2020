@@ -1,0 +1,24 @@
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
+module Week08 where
+
+{-   WEEK 8 : PARSER COMBINATORS -}
+
+-- Lec14 & Lec15
+
+
+{-    PART 1 : WRITING PARSERS, THE WRONG WAY -}
+
+
+{-    PART 2 : PARSING WITH LEFTOVERS -}
+
+
+{-    PART 3 : PARSER BUILDING BLOCKS -}
+
+
+{-    PART 4 : PARSING STRING LITERALS -}
+
+
+{-    PART 5 : PARSING JSON -}
+
+
+{-    PART 6 : PARSING ARITHMETIC EXPRESSIONS -}

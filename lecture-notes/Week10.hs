@@ -1,0 +1,16 @@
+{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
+module Week10 where
+
+{-   WEEK 10 : INFINITE DATA AND PROCESSES -}
+
+-- Lec17
+
+{-    PART 1 : HOW HASKELL EVALUATES -}
+
+{-    PART 2 : TERMINATION BEHAVIOUR -}
+
+{-    PART 3 : SHARING AND LAZINESS -}
+
+{-    PART 4 : LAZINESS, PROCRASTINATION AND STRICTNESS -}
+
+{-    PART 5 : INFINITE DATA -}

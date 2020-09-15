@@ -21,7 +21,16 @@ executable CS316-Y2020
 
 library
   hs-source-dirs:      lecture-notes
-  exposed-modules:     Week1
+  exposed-modules:     Week01,
+                       Week02,
+                       Week03,
+                       Week04,
+                       Week05,
+                       Week06,
+                       Week07,
+                       Week08,
+                       Week09,
+                       Week10
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
 
