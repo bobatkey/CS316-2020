@@ -1,18 +1,19 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 module Week01 where
 
-import Prelude hiding (Left, Right, Maybe (..))
+import Prelude hiding (Left, Right, Maybe (..), length, reverse, take, drop)
 
 {-   CS316 FUNCTIONAL PROGRAMMING 2020/21
 
          Week 1 : DATA AND FUNCTIONS
 -}
 
-{-!      Part 1.1 : DEFINING DATA TYPES AND VALUES
+{-!      Part 1.1 : DEFINING DATATYPES AND VALUES
 
-   This first week introduces the two main concepts in Haskell:
+   This video introduces the two main concepts of functional
+   programming in Haskell:
 
-     1. Defining the data types to represent problems.
+     1. Defining datatypes to represent problems.
 
      2. Transforming data values using pattern matching functions.
 -}
@@ -62,7 +63,11 @@ data Direction = Up | Down | Left | Right
 {-! Value definitions -}
 
 whereIsTheCeiling :: Direction
-whereIsTheCeiling = undefined
+whereIsTheCeiling = Up
+
+whereIsTheFloor :: Direction
+whereIsTheFloor = Down
+
 
 
 
@@ -78,10 +83,15 @@ whereIsTheCeiling = undefined
 {-! Defining functions -}
 
 flipVertically :: Direction -> Direction
-flipVertically = undefined
+flipVertically Up    = Down
+flipVertically Down  = Up
+flipVertically Left  = Left
+flipVertically Right = Right
 
 isVertical :: Direction -> Bool
-isVertical = undefined
+isVertical Up    = True
+isVertical Down  = True
+isVertical _     = False
 
 
 
@@ -96,8 +106,11 @@ isVertical = undefined
 {-! Defining Functions of two arguments -}
 
 equalDirection :: Direction -> Direction -> Bool
-equalDirection = undefined
-
+equalDirection Up    Up    = True
+equalDirection Down  Down  = True
+equalDirection Left  Left  = True
+equalDirection Right Right = True
+equalDirection _     _     = False
 
 
 
@@ -142,7 +155,10 @@ data DirectionWithDistance
 {-! Constructing Data with Parameters -}
 
 withDistance :: Direction -> Integer -> DirectionWithDistance
-withDistance = undefined
+withDistance Up    d = UpD d
+withDistance Down  d = DownD d
+withDistance Left  d = LeftD d
+withDistance Right d = RightD d
 
 
 
@@ -157,10 +173,16 @@ withDistance = undefined
 {-! Pattern matching parameters -}
 
 getDistance :: DirectionWithDistance -> Integer
-getDistance = undefined
+getDistance (UpD d)    = d
+getDistance (DownD d)  = d
+getDistance (LeftD d)  = d
+getDistance (RightD d) = d
 
 getDirection :: DirectionWithDistance -> Direction
-getDirection = undefined
+getDirection (UpD d)    = Up
+getDirection (DownD d)  = Down
+getDirection (LeftD d)  = Left
+getDirection (RightD d) = Right
 
 
 
@@ -176,10 +198,10 @@ data DirectionWithDistance2
   deriving Show
 
 getDistance2 :: DirectionWithDistance2 -> Integer
-getDistance2 = undefined
+getDistance2 (DirectionWithDistance dir dist) = dist
 
 getDirection2 :: DirectionWithDistance2 -> Direction
-getDirection2 = undefined
+getDirection2 (DirectionWithDistance dir dist) = dir
 
 
 
@@ -188,8 +210,10 @@ getDirection2 = undefined
 {-! Chaining Functions together -}
 
 convertDirection :: DirectionWithDistance -> DirectionWithDistance2
-convertDirection = undefined
+convertDirection dwd = DirectionWithDistance (getDirection dwd) (getDistance dwd)
 
+convertDirectionBack :: DirectionWithDistance2 -> DirectionWithDistance
+convertDirectionBack (DirectionWithDistance dir dist) = withDistance dir dist
 
 
 
@@ -215,7 +239,7 @@ convertDirection = undefined
 
 
 
-{-!      Part 1.3 : DATATYPES AND FUNCTIONS WITH PARAMETERS -}
+{-!      Part 1.3 : DATATYPES AND FUNCTIONS WITH TYPE PARAMETERS -}
 
 data Pair a b = MkPair a b
   deriving Show
@@ -230,18 +254,22 @@ type DirectionWithDistance3 = Pair Direction Integer
 
 
 
-{- Functions on Pairs -}
+{-! Functions on Pairs -}
 
 getFirst :: Pair a b -> a
-getFirst = undefined
+getFirst (MkPair a b) = a
 
 getSecond :: Pair a b -> b
-getSecond = undefined
+getSecond (MkPair a b) = b
 
 swap :: Pair a b -> Pair b a
-swap = undefined
+swap (MkPair a b) = MkPair b a
 
-{- Maybe -}
+
+
+
+
+{-! Maybe -}
 
 data Maybe a
   = Nothing
@@ -249,10 +277,27 @@ data Maybe a
   deriving Show
 
 verticalDistance :: Pair Direction Integer -> Maybe Integer
-verticalDistance (MkPair Up   dist) = Just dist
-verticalDistance (MkPair Down dist) = Just dist
-verticalDistance (MkPair _    dist) = Nothing
+verticalDistance (MkPair Up dist)    = Just dist
+verticalDistance (MkPair Down dist)  = Just dist
+verticalDistance (MkPair Left dist)  = Nothing
+verticalDistance (MkPair Right dist) = Nothing
 
+
+
+
+
+
+{-! Summary
+
+  - Datatypes can be defined with type parameters, so they can work
+    with multiple types.
+
+  - Functions that work on these datatypes work for all possible
+    types.
+
+  - Type parameterised datatypes are a useful way to define common
+    patterns of data types.
+-}
 
 
 
@@ -264,7 +309,12 @@ data List a
   | Cons a (List a)
   deriving Show
 
+onetwothree :: List Integer
+onetwothree = Cons 1 (Cons 2 (Cons 3 Nil))
 
+isNil :: List a -> Bool
+isNil Nil        = True
+isNil (Cons _ _) = False
 
 
 
@@ -274,8 +324,11 @@ data List a
 
 {-! Making lists -}
 
+singleton :: a -> List a
+singleton a = Cons a Nil
 
-
+listPair :: a -> a -> List a
+listPair a1 a2 = Cons a1 (Cons a2 Nil)
 
 
 
@@ -288,6 +341,12 @@ data List a
 
 
 {-! Built-in List syntax -}
+
+singleton2 :: a -> [a]
+singleton2 a = [a]
+
+listPair2 :: a -> a -> [a]
+listPair2 a b = [a,b]
 
 
 
@@ -305,10 +364,12 @@ data List a
 {-! Head and Tail -}
 
 getHead :: [a] -> Maybe a
-getHead = undefined
+getHead []     = Nothing
+getHead (x:xs) = Just x
 
 getTail :: [a] -> Maybe [a]
-getTail = undefined
+getTail []     = Nothing
+getTail (x:xs) = Just xs
 
 
 
@@ -320,7 +381,8 @@ getTail = undefined
 {-! Length of a list -}
 
 length :: [a] -> Integer
-length = undefined
+length []     = 0
+length (x:xs) = 1 + length xs
 
 
 
@@ -335,7 +397,23 @@ length = undefined
 {-! Summing up a list -}
 
 sumList :: [Integer] -> Integer
-sumList = undefined
+sumList []     = 0
+sumList (x:xs) = x + sumList xs
+
+--   sumList [1,2,3]
+-- = sumList (1:2:3:[])
+-- = 1 + sumList (2:3:[])
+-- = 1 + 2 + sumList (3:[])
+-- = 1 + 2 + 3 + sumList []
+-- = 1 + 2 + 3 + 0
+-- = 6
+
+
+
+
+
+
+
 
 
 {-! Summary
@@ -358,9 +436,14 @@ sumList = undefined
 {- Append -}
 
 append :: [a] -> [a] -> [a]
-append = undefined
+append []     ys = ys
+append (x:xs) ys = x : append xs ys
 
-
+--   append [1,2] [3,4]
+-- = 1 : append [2] [3,4]
+-- = 1 : 2 : append [] [3,4]
+-- = 1 : 2 : [3,4]
+-- = [1,2,3,4]
 
 
 
@@ -371,7 +454,15 @@ append = undefined
 {-! Reverse -}
 
 reverse :: [a] -> [a]
-reverse = undefined
+reverse []     = []
+reverse (x:xs) = reverse xs `append` [x]
+
+--   reverse [1,2,3]
+-- = append (reverse [2,3]) [1]
+-- = append (append (reverse [3]) [2]) [1]
+-- = append (append (append (reverse []) [3]) [2]) [1]
+-- = append (append (append [] [3]) [2]) [1]
+-- = [3,2,1]
 
 
 
@@ -386,10 +477,18 @@ reverse = undefined
 {-! Fast Reverse -}
 
 fastReverse :: [a] -> [a]
-fastReverse = undefined
+fastReverse xs = fastReverseHelper xs []
 
 fastReverseHelper :: [a] -> [a] -> [a]
-fastReverseHelper = undefined
+fastReverseHelper []     accum = accum
+fastReverseHelper (x:xs) accum = fastReverseHelper xs (x:accum)
+
+--   fastReverseHelper [1,2] []
+-- = fastReverseHelper [2] (1:[])
+-- = fastReverseHelper [] (2:1:[])
+-- = [2,1]
+
+
 
 
 
@@ -404,7 +503,8 @@ fastReverseHelper = undefined
 
     - They are both defined by recursion over the input list.
 
-    - Fast reverse reverses a list by using an accumulator.
+    - Fast reverse reverses a list by using an accumulator, giving
+      linear time complexity.
 -}
 
 
@@ -417,7 +517,9 @@ fastReverseHelper = undefined
 {- Take -}
 
 take :: Integer -> [a] -> [a]
-take = undefined
+take 0 xs     = []
+take n []     = []
+take n (x:xs) = x : take (n-1) xs
 
 
 
@@ -430,7 +532,9 @@ take = undefined
 {-! Drop -}
 
 drop :: Integer -> [a] -> [a]
-drop = undefined
+drop 0 xs     = xs
+drop n []     = []
+drop n (x:xs) = drop (n-1) xs
 
 
 
@@ -445,4 +549,30 @@ drop = undefined
 {-! Chunk -}
 
 chunk :: Integer -> [a] -> [[a]]
-chunk = undefined
+chunk n [] = []
+chunk n xs = take n xs : chunk n (drop n xs)
+
+-- chunk 0 [1,2,3,4,5]
+-- take 0 [1,2,3,4,5] : chunk 0 (drop 0 [1,2,3,4,5])
+-- [] : chunk 0 [1,2,3,4,5]
+-- [] : [] : [] : [] : ...
+
+
+
+
+
+
+
+
+
+
+
+{-! Summary
+
+   - Functions on lists can be defined by recursion on numbers and not
+     the list itself.
+
+   - 'take' and 'drop' are examples of such.
+
+   - Lists can be nested.
+-}
