@@ -6,14 +6,29 @@ Strathclyde CS316 “Functional Programming” course.
 This is a course designed to teach Haskell to undergraduate
 students. The written course materials are available from this
 repository. Video lectures and access to the Mattermost forum for this
-course are available to Strathclyde students via MyPlace.
+course are available to Strathclyde students via the course's [MyPlace page](https://classes.myplace.strath.ac.uk/course/view.php?id=15897).
 
-## Building this repository
+## Getting started
 
 The code in this repository is structured as a
-[stack](https://docs.haskellstack.org/en/stable/README/) project.
+[Stack](https://docs.haskellstack.org/en/stable/README/) project. You
+can install Stack by following the instructions on the linked page.
 
-FIXME: how to install stack and build the notes.
+Once you have Slack installed, running the following commands on a
+Unix-like system will get the Haskell compiler installed, and the
+lecture notes and other programs compiled:
+
+```
+$ cd some/nice/directory      # replace 'some/nice/directory' with a real one
+$ git clone https://github.com/bobatkey/CS316-2020.git
+$ cd CS316-2020
+$ stack build
+    ... lots of output, might download some things ...
+$ stack exec hello-cs316
+hello CS316!
+$ stack ghci lecture-notes/Week01.hs
+    ... will start the interactive Haskell compiler with Week 1's lecture notes loaded ...
+```
 
 ## Lecture Notes
 
@@ -36,3 +51,8 @@ that we will go through in the tutorial sessions.
 - [Week 8](lecture-notes/Week08.hs) : Parser Combinators
 - [Week 9](lecture-notes/Week09.hs) : Real side effects
 - [Week 10](lecture-notes/Week10.hs) : Infinite Data and Processes
+
+## Coursework Assignments
+
+The coursework assignments will be distributed via this repository
+when they are released. Check MyPlace for dates.
