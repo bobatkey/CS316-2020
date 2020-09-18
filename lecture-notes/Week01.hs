@@ -824,7 +824,8 @@ drop n (x:xs) = drop (n-1) xs
 chunk :: Integer -> [a] -> [[a]]
 
 {- The function 'chunk' takes an 'Integer', which is the chunk size, and
- a list of 'a's. It returns a list of lists of 'a's (note the *two* pairs of square brackets, meaning a list of lists).
+   a list of 'a's. It returns a list of lists of 'a's (note the *two*
+   pairs of square brackets, meaning a list of lists).
 
    The idea is that 'chunk n xs' will split 'xs' into chunks of size
    'n'. For example:
