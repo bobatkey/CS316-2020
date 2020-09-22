@@ -897,7 +897,7 @@ pairOfEqualDirections = undefined
 
 
 {- 4. Define a datatype 'Triple a b c' for values that have three
-      components. Write functions 'get1of3 :: Tuple a b c -> a',
+      components. Write functions 'get1of3 :: Triple a b c -> a',
       'get2of3' and 'get3of3' that return the first, second and third
       components. You will have to come up with the type signatures
       for the second and third one. -}
