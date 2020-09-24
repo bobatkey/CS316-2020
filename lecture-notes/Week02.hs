@@ -450,25 +450,6 @@ treeMember a (Node l x r)
 
 
 
--- FIXME: explain why flatten is slow
-
-
-{-
-flattenAccum :: Tree a -> [a] -> [a]
-flattenAccum Leaf accumulator = accumulator
-flattenAccum (Node smaller x larger) accumulator =
-  let accumulator0 = flattenAccum larger accumulator
-      accumulator1 = x : accumulator0
-      accumulator2 = flattenAccum smaller accumulator1
-  in
-  accumulator2
--}
-
--- FIXME: or write it out in one line
-
--- FIXME: spell out how this works via rewriting
-
--- treesort2 = flattenAccum (listToTree xs) []
 
 {-   PART 6 : BACKTRACKING SEARCH -}
 
