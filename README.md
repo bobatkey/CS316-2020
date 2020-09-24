@@ -12,7 +12,10 @@ course are available to Strathclyde students via the course's [MyPlace page](htt
 
 The code in this repository is structured as a
 [Stack](https://docs.haskellstack.org/en/stable/README/) project. You
-can install Stack by following the instructions on the linked page.
+can install Stack by following the instructions on the linked
+page. Note that for Windows, the link to the installer appears to be
+broken, please try [this link
+instead](https://github.com/commercialhaskell/stack/releases/download/v2.3.3/stack-2.3.3-windows-x86_64-installer.exe).
 
 Once you have Slack installed, running the following commands on a
 Unix-like system will get the Haskell compiler installed, and the
