@@ -18,7 +18,7 @@ import Prelude hiding ((.), map, filter)
    passed into functions, and stored in data structures. -}
 
 
-{-    PART 1 : FUNCTIONS THAT RETURN FUNCTIONS
+{-    PART 3.1 : FUNCTIONS THAT RETURN FUNCTIONS
 
    First, we will look at how functions can return functions as
    results.
@@ -108,7 +108,7 @@ fst2 = \(a,b) -> a
    that take other functions as input. -}
 
 
-{-    PART 2 : FUNCTIONS THAT TAKE FUNCTIONS AS INPUTS
+{-    PART 3.2 : FUNCTIONS THAT TAKE FUNCTIONS AS INPUTS
 
    As I said in the introduction, Haskell treats functions as it does
    any other kind of value. The can be returned by functions, as we
@@ -215,7 +215,7 @@ octtuple = twice quadruple
 
 {- FIXME: another example of twice. -}
 
-{-    PART 3 : MAP AND FILTER -}
+{-    PART 3.3 : MAP AND FILTER -}
 
 {- One of the most useful places to use higher-order functions is to
    make general functions for processing containers full of
@@ -280,12 +280,15 @@ onlyEvens = filter (\x -> x `mod` 2 == 0)
    building functions that work on lists, without having to write
    similar looking code over and over again. -}
 
-{-    PART 4 : MAP FOR TREES -}
+-- FIXME: larger and smaller from the quicksort example
+
+{-    PART 3.4 : MAP FOR TREES AND MAYBE -}
+
 
 -- FIXME
 
 
-{-    PART 5 : USEFUL COMBINATORS
+{-    PART 3.5 : USEFUL HIGHER ORDER FUNCTIONS
 
    Now that we have reusable functions for transforming lists, we need
    a way to plug them together. We do this by 'composing' two
@@ -395,4 +398,7 @@ everyOther2 =  map snd . filter fst . zip (cycle [False, True])
 
 
 
-{-    PART 6 : PROPERTIES OF MAP -}
+{-    PART 3.6 : PROPERTIES OF MAP -}
+
+
+-- FIXME
