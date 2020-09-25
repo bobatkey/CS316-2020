@@ -7,8 +7,7 @@ module Week02 where
 
    This week, we continue our exploration of solving problems in
    Haskell by the use of recursion, and look at other ways to make
-   decisions beyond pattern matching. FIXME
--}
+   decisions beyond pattern matching. -}
 
 
 {-     Part 2.1 : SEARCHING LISTS
@@ -147,16 +146,14 @@ isMember3 x (y:ys)
    that it only works for types are that are 'Ord'ered. This allows us
    to use the '<' comparison. -}
 
--- QUESTION: counting the number of occurrences of an element
 
 
-{-     PART 2.2 : REMOVING AND INSERTING ELEMENTS
+{-     Part 2.2 : REMOVING AND INSERTING ELEMENTS
 
    We've seen how to search sorted lists, how about adding and
    removing elements from them?
--}
 
-{- Consider the problem of inserting a value into a sorted list, so
+   Consider the problem of inserting a value into a sorted list, so
    that the resulting list is still sorted. If we assume that the
    input list is sorted in ascending order, then there are three cases
    to consider:
@@ -186,13 +183,20 @@ insert x (y:ys)
    works on an example list:
 
            insert 3 [1,4]
-         =
+         =                       { 3 >= 1, so we put '1' in the output list }
            1 : insert 3 [4]
-         =
+         =                       { 3 < 4, so we put '3' in the output list, followed by the remainder of the list }
            1 : 3 : 4 : []
-         =
+         =                       { the [ , , ] notation is sugar for the ':' notation }
            [1,3,4]
 -}
+
+{- Removing elements from a list involves a similar process of searching
+   through a list rebuilding it in the output as we go. The difference
+   from insertion is that once we have found the element, we remove it
+   by *not* returning it in the result.
+
+   Let's see how this works in Haskell: -}
 
 remove :: Ord a => a -> [a] -> [a]
 remove y [] = []
@@ -201,21 +205,33 @@ remove y (x:xs)
   | x < y     = x:remove y xs
   | otherwise = x:xs
 
+{- Reading the lines in order:
+
+   - To remove 'y' from the empty list, the result is the empty list.
+
+   - To remove 'y' from a list with head 'x' and tail 'xs':
+
+     - If 'x == y', then we do *not* return 'x' in the output list,
+       but we do return the rest of the input 'xs'.
+
+     - If 'x < y', then we know that 'x' may be later in 'xs', so we
+       return 'x' in the output, followed by the result of removing
+       'y' from 'xs'.
+
+     - Otherwise (when 'x > y'), we know that 'y' cannot appear later
+       in the list, so we return the list 'x:xs'.
+
+   It is also worth working out what happens with these functions by
+   spelling out by hand the steps involved in removing '2' from the
+   list '[1,2,2,3]'. -}
 
 
-{- FIXME: The functions we have written in this part are structurally
-   recursive: when we call 'insert' inside the definition of 'insert',
-   we are using a value ('ys') we got from the input. Therefore, we
-   can say that 'insert' follows the structure of its input. -}
 
--- QUESTION: insertion without duplication
--- QUESTION: removal of all duplicates
-
-{-    PART 2.3 : INSERTION SORT AND QUICKSORT
+{-    Part 2.3 : INSERTION SORT AND QUICKSORT
 
    Using 'insert', we can write a sorting function by repeatedly
    inserting each element into a sorted list. Again, we can define
-   this function by structural recursion on the input list: -}
+   this function by recursion on the input list: -}
 
 isort :: Ord a => [a] -> [a]
 isort []     = []
@@ -235,7 +251,7 @@ isort (x:xs) = insert x (isort xs)
 
    However, 'isort' has a problem, which we can see by writing out the
    trace of sorting a reversed list and writing the number of steps
-   each time:
+   taken each time:
 
         isort [3,2,1]
        =   { 4 }
@@ -275,8 +291,6 @@ qsort (x:xs) = qsort smaller ++ [x] ++ qsort larger
   where smaller = [ y | y <- xs, y < x ]
         larger  = [ y | y <- xs, y >= x ]
 
--- FIXME: remove the list comprehensions
-
 {- We have used two new constructs here:
 
    1. 'where' allows us to split out parts of a definition and write
@@ -298,7 +312,7 @@ qsort (x:xs) = qsort smaller ++ [x] ++ qsort larger
    QuickSort, and some might say it is not really QuickSort at
    all. QuickSort, as originally defined by Hoare, operated on arrays
    and sorted in instead of creating (a lot of) new lists as this
-   implementation does. For more informaton / opinions, see:
+   implementation does. For more information / opinions, see:
 
       https://stackoverflow.com/questions/7717691/why-is-the-minimalist-example-haskell-quicksort-not-a-true-quicksort
 
@@ -309,12 +323,14 @@ qsort (x:xs) = qsort smaller ++ [x] ++ qsort larger
 
    END OF ASIDE.
 
-   The definition of 'qsort' is all very well, but it is not
-   structurally recursive. We call 'qsort' recursively on lists that
-   are computed via a (relatively) complex list comprehension, and not
-   just ones that are discovered by pattern matching. This makes it
-   harder to see that 'qsort' is definitely doing the right
-   thing.
+   The definition of 'qsort' is all very well, but it is not recursive
+   on the *structure* of the input list, like most of the functions we
+   have seen so far.
+
+   We call 'qsort' recursively on lists that are computed via a
+   (relatively) complex list comprehension, and not just ones that are
+   discovered by pattern matching. This makes it harder to see that
+   'qsort' is definitely doing the right thing.
 
    To help us see what is going on inside 'qsort', let's step through
    an example:
@@ -346,11 +362,11 @@ qsort (x:xs) = qsort smaller ++ [x] ++ qsort larger
                [] []
 
    Let's now see how to reformulate 'qsort' in terms of intermediate
-   tree data structure, which will help us make a structurally
-   recursive variant. -}
+   tree data structure, which will help us make a variant of quicksort
+   that exposes the hidden recursive structure. -}
 
 
-{-   PART 2.3 : TREESORT
+{-    Part 2.4 : TREESORT
 
    We want to represent binary trees, so we create a new data type for
    this purpose. We name this data type 'BST' for Binary Search Tree
@@ -435,7 +451,7 @@ treesort xs = flatten (listToTree xs)
 
 
 
-{-   PART 2.5 : SEARCHING AND UPDATING TREES
+{-   Part 2.5 : SEARCHING AND UPDATING TREES
 
 
 -}
@@ -449,27 +465,94 @@ treeMember a (Node l x r)
  | otherwise = treeMember a r
 
 
+{-! Key/Value stores
+
+  Examples...
+-}
+
+type KV k v = BST (k,v)
+
+store :: KV String Int
+store = Node (Node Leaf ("a",1) Leaf) ("b",2) (Node Leaf ("c",3) Leaf)
 
 
-{-   PART 6 : BACKTRACKING SEARCH -}
+
+
+
+
+
+{-! treeFind -}
+
+treeFind :: Ord k => k -> KV k v -> Maybe v
+treeFind k Leaf = Nothing
+treeFind k (Node l (k',v') r)
+  | k == k'   = Just v'
+  | k < k'    = treeFind k l
+  | otherwise = treeFind k r
+
+
+
+
+
+
+
+
+
+
+
+{-! treeInsert -}
+
+treeInsert :: Ord k => k -> v -> KV k v -> KV k v
+treeInsert k v Leaf = Node Leaf (k,v) Leaf
+treeInsert k v (Node l (k',v') r)
+  | k == k'   = Node l (k,v) r
+  | k < k'    = Node (treeInsert k v l) (k',v') r
+  | otherwise = Node l (k',v') (treeInsert k v r)
+
+
+
+
+
+
+
+
+
+
+
+
+{-! Summary
+
+    - Binary Search Trees are useful for more than just sorting
+
+    - Haskell has built in pair, triple, etc. types
+
+    - Binary search trees full of pairs can be used to represent key/value stores
+-}
+
+
+
+
+{-    Part 2.6 : BACKTRACKING SEARCH AND CASE EXPRESSIONS -}
 
 type Coin = Int
-
-orElse :: Maybe a -> Maybe a -> Maybe a
-orElse Nothing  x = x
-orElse (Just a) _ = Just a
 
 makeChange :: [Coin] -> [Coin] -> Int -> Maybe [Coin]
 makeChange coins        used 0 = Just used
 makeChange []           used _ = Nothing
 makeChange (coin:coins) used amount
   | amount >= coin =
-    makeChange coins (coin:used) (amount - coin)
-    `orElse`
-    makeChange coins used amount
+    case makeChange coins (coin:used) (amount - coin) of
+      Just coins -> Just coins
+      Nothing    -> makeChange coins used amount
   | otherwise =
     makeChange coins used amount
 
--- TODO: makeChange with lists
 
--- Question: makeChange with replacement
+{------------------------------------------------------------------------------}
+{- TUTORIAL QUESTIONS                                                         -}
+{------------------------------------------------------------------------------}
+
+-- QUESTION: counting the number of occurrences of an element
+-- QUESTION: insertion without duplication
+-- QUESTION: removal of all duplicates
+-- QUESTION: mergesort
