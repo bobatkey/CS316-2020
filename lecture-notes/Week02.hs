@@ -520,14 +520,6 @@ treeInsert k v (Node l (k',v') r)
 
 
 
-{-! Summary
-
-    - Binary Search Trees are useful for more than just sorting
-
-    - Haskell has built in pair, triple, etc. types
-
-    - Binary search trees full of pairs can be used to represent key/value stores
--}
 
 
 
