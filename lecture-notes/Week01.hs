@@ -98,7 +98,7 @@ data Direction = Up | Down | Left | Right
      strings, so they can be printed out. Think of this as
      auto-generating something similar to Java's 'toString()' methods.
 
-   Now that have defined a datatype, we can make some value
+   Now that we have defined a datatype, we can make some value
    definitions. Here is a value definition: -}
 
 whereIsTheCeiling :: Direction
