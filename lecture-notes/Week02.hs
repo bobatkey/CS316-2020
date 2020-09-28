@@ -451,37 +451,108 @@ treesort xs = flatten (listToTree xs)
 
 
 
-{-   Part 2.5 : SEARCHING AND UPDATING TREES
+{-    Part 2.5 : SEARCHING AND UPDATING TREES
 
+   Binary search trees are useful for many applications beyond
+   TreeSort. In this part, we will look at how to use them to
+   implement a simple kind of key/value store.
 
--}
+   As a warm up before introducing key/value stores, let's implement
+   the equivalent of the 'isMember' function from Part 2.1 for Binary
+   Search Trees.
 
-
+   We will need the constraint 'Ord' on the type of values stored in
+   the tree: -}
 treeMember :: Ord a => a -> BST a -> Bool
-treeMember a Leaf = False
-treeMember a (Node l x r)
- | a == x    = True
- | a < x     = treeMember a l
- | otherwise = treeMember a r
 
+{- The definition now splits depending on whether we are searching a
+   'Leaf' or a 'Node' of a tree. 'Leaf's do not store any values, so
+   'treeMember' always returns 'False': -}
+treeMember x Leaf = False
 
-{-! Key/Value stores
+{- When we are searching a 'Node', there are three sub-cases: either the
+   thing we are looking for is equal to the value at the current node,
+   or it is less than the current node, or it is greater than the
+   current node. In these cases, we return 'True', or search the left
+   or right subtree as appropriate: -}
+treeMember x (Node l y r)
+ | x == y    = True
+ | x < y     = treeMember x l
+ | otherwise = treeMember x r
 
-  Examples...
--}
+{- Let's check this works:
+
+       *Week02> treeMember 4 Leaf
+       False
+       *Week02> treeMember 4 (Node Leaf 4 Leaf)
+       True
+       *Week02> treeMember 4 (Node (Node Leaf 4 Leaf) 6 (Node Leaf 7 Leaf))
+       True
+       *Week02> treeMember 3 (Node (Node Leaf 4 Leaf) 6 (Node Leaf 7 Leaf))
+       False
+       *Week02> treeMember 7 (Node (Node Leaf 4 Leaf) 6 (Node Leaf 7 Leaf))
+       True
+
+   'treeMember' has a similar structure to the 'isMember' function for
+   searching lists, but now we can use the shape of the tree to guide
+   our search. If the tree is well-balanced, then this will be much
+   faster than searching a list. -}
+
+{- To use binary search trees to implement key/value stores, we need to
+   store pairs of keys and values instead of single data values. To do
+   this, we could use the 'Pair' datatype we defined in Part 1.3, but
+   it is easier to use a built in feature of Haskell for pair (and
+   triple, and quadruple, ...) types. We can write any pair of values
+   with a comma between them between parentheses to create a pair:
+
+     *Week02> ("hello", 5)
+     ("hello", 5)
+
+   If we ask for the type, we get:
+
+     *Week02> :t ("hello", 5)
+     ("hello", 5) :: Num b => ([Char], b)
+
+   which says that '("hello", 5)' is a pair of a list of 'Char's
+   (a.k.a. a String), and any type 'b' that is a 'Num' type.
+
+   Pattern matching on pairs uses the same '(,)' syntax: -}
+
+getFirst :: (a,b) -> a
+getFirst (x,y) = x
+
+{- With pair types, we can represent key/value stores as binary search
+   trees contains pairs of keys and values. We make a type synonym: -}
 
 type KV k v = BST (k,v)
+
+{- So the type 'KV String Int' contains values that are key/value stores
+   mapping 'String' keys to 'Int' values.
+
+   In the functions we write below, we will be careful to maintain the
+   ordering constraints of binary search trees with respect to the
+   keys but not the values. This makes sense: we will be looking up
+   values by their keys, so it is the keys that we need to keep
+   ordered.
+
+   Here is an example of a simple key/value store mapping 'String's to
+   'Int's: -}
 
 store :: KV String Int
 store = Node (Node Leaf ("a",1) Leaf) ("b",2) (Node Leaf ("c",3) Leaf)
 
+{- This store maps "a" to 1, "b" to 2, and "c" to 3. Note that the keys
+   are stored in order, and respect the 'left subtrees are smaller'
+   and 'right subtrees are larger' constraint. -}
 
+{- The first function we'll write is 'treeFind', which looks up a value
+   by its key.
 
-
-
-
-
-{-! treeFind -}
+   The type of this function is similar to 'treeMember' above, but the
+   return type is different. We return 'Maybe v': either the
+   searched-for key has a value (so it returns 'Just v') or it doesn't
+   (so it returns 'Nothing'). Otherwise, the function is similar to
+   'treeMember' above: -}
 
 treeFind :: Ord k => k -> KV k v -> Maybe v
 treeFind k Leaf = Nothing
@@ -490,17 +561,15 @@ treeFind k (Node l (k',v') r)
   | k < k'    = treeFind k l
   | otherwise = treeFind k r
 
+{- Insertion into a key/value store is similar to the 'insertBST'
+   function we wrote in Part 2.4, except that:
 
+   - 'treeInsert' takes a key 'k' and a value 'v' to insert, instead
+     of a single value.
 
-
-
-
-
-
-
-
-
-{-! treeInsert -}
+   - 'treeInsert' specially handles the case when the key 'k' we are
+     inserting is already present in the tree. In this case, we return
+     a tree with the new value (v) and not the old one (v'). -}
 
 treeInsert :: Ord k => k -> v -> KV k v -> KV k v
 treeInsert k v Leaf = Node Leaf (k,v) Leaf
@@ -510,23 +579,175 @@ treeInsert k v (Node l (k',v') r)
   | otherwise = Node l (k',v') (treeInsert k v r)
 
 
+{-    Part 2.6 : BACKTRACKING SEARCH AND CASE EXPRESSIONS
 
+   In the first part of this week, we looked at how functions can make
+   decisions using 'if-then-else' and guards. Both of these are
+   limited to testing conditions that return 'Bool'ean results that
+   are either 'True' or 'False'. However, Haskell functions can return
+   much more informative datatypes than just 'Bool', so we need a way
+   to pattern match on values returned from functions, as well as the
+   values passed into functions like we have done so far.
 
+   To do this, we use a case expression. Here is an example: -}
 
+treeMember2 :: Ord a => a -> BST a -> Bool
+treeMember2 x Leaf = False
+treeMember2 x (Node l y r) =
+  case compare x y of
+    EQ -> True
+    LT -> treeMember2 x l
+    GT -> treeMember2 x r
 
+{- This is a rewrite of the 'treeMember' function, except that instead
+   of using guards and a sequence of true/false conditions, we use a
+   the comparison function 'compare' instead, with a 'case'
+   expression.
 
+   Let's take this step by step to understand what is going on. We can
+   get the type of 'compare' from GHCi by using ':info':
 
+        *Week02> :info compare
+        class Eq a => Ord a where
+          compare :: a -> a -> Ordering
+          ...
+                -- Defined in ‘ghc-prim-0.5.3:GHC.Classes’
 
+   So 'compare' takes two 'Ord' things of the same type and returns an
+   'Ordering'. Using ':info' again, we can see how 'Ordering' is
+   defined:
 
+        *Week02> :info Ordering
+        data Ordering = LT | EQ | GT
+                -- Defined in ‘ghc-prim-0.5.3:GHC.Types’
 
+   So an 'Ordering' can be either 'LT' (less than), 'EQ' (equal) or
+   'GT' (greater than). We might have a guess now at what 'compare'
+   will do, but let's test it in GHCi:
 
+        *Week02> compare 1 2
+        LT
+        *Week02> compare 2 2
+        EQ
+        *Week02> compare 2 1
+        GT
 
+   So we can use 'compare' to test two 'Ord'ered things, and it
+   returns a value telling us how the two things are ordered. The
+   'case' expression then allows us to return different things
+   depending on the ordering:
 
+        case compare x y of
+          EQ -> True
+          LT -> treeMember2 x l
+          GT -> treeMember2 y r
 
+   In general, a 'case' expression has the form:
 
-{-    Part 2.6 : BACKTRACKING SEARCH AND CASE EXPRESSIONS -}
+        case <expression> of
+          <pattern1> -> <code for case 1>
+          ...
+          <patternN> -> <code for case N>
+
+   The patterns are of the same form as the ones that appear when
+   writing the lines of a function definition. They can also have
+   guards attached to them. Note that all the patterns have to line up
+   in the same column, otherwise you will get a syntax error. -}
+
+{- We finish this week with a larger example of a function that uses
+   case expressions, and also stores information in an accumulator
+   argument as it goes (similar to the 'reverse' example from last
+   week).
+
+   The problem we are going to look at is splitting up some amount of
+   money with some coins, if this is a possible.
+
+   For example, if we have the amount 54 and the coins
+   [50,20,20,10,2,2,1,1], then there are several ways of splitting it
+   up:
+
+   - [2,2,50]
+   - [1,1,2,50]
+   - [2,2,10,20,20]
+   - [1,1,2,10,20,20]
+
+   We are going to write a function that searches for one way of
+   splitting up an amount into some coins. It may not always be
+   possible, so we will use a 'Maybe' to allow for the possibility
+   that we will have to return 'Nothing'.
+
+   First, let's make a type synonym for 'Coin's so that our types are
+   easier to read: -}
 
 type Coin = Int
+
+{- Our first attempt at a function for making change takes the following approach:
+
+   - The function will take three arguments:
+     - the list of coins available for use
+     - the list of coins that have been used so far
+     - the amount that remains to be split
+
+  - When the amount to be split is '0', then we have succeeded, so we
+    return 'Just' the coins used so far.
+
+  - When the amount to be split is not '0', and we have no coins
+    available, we have failed, so we return 'Nothing'.
+
+  - When we have coins available, we check to see whether or not the
+    amount remaining to be split is greater than the first available
+    coin. If it is, then we can use this coin: we add it to the 'used'
+    list and subtract it from the current amount. We then call
+    ourselves recursively to try the rest of the coins.
+
+  The following definition implements this idea: -}
+
+makeChange0 :: [Coin] -> [Coin] -> Int -> Maybe [Coin]
+makeChange0 coins        used 0 = Just used
+makeChange0 []           used _ = Nothing
+makeChange0 (coin:coins) used amount
+  | amount >= coin =
+    makeChange0 coins (coin:used) (amount - coin)
+  | otherwise =
+    makeChange0 coins used amount
+
+{- Let's try it on an example:
+
+       *Week02> makeChange0 [50,20,20,10,2,2,1,1] [] 54
+       Just [2,2,50]
+
+   So it seems to work? What if we give it an odd selection of coins?
+
+       *Week02> makeChange0 [50,20,20,11,2,1] [] 54
+       Nothing
+
+   But this should have worked! 20+20+11+2+1 = 54. What went wrong?
+
+   We can see what went wrong by tracing out what the function does:
+
+       makeChange0 [50,20,20,11,2,1] [] 54
+     = makeChange0 [20,20,11,2,1] [50] 4
+     = makeChange0 [20,11,2,1] [50] 4
+     = makeChange0 [11,2,1] [50] 4
+     = makeChange0 [2,1] [50] 4
+     = makeChange0 [1] [50] 2
+     = makeChange0 [] [50] 1
+     = Nothing
+
+  In the first step, 50 <= 54, so the function greedily tries to use
+  '50', yielding the new amount '4' to split. The coins '20,20,11' are
+  too big, and when we get down to '2' and '1' there aren't enough
+  coins left.
+
+  The problem is that we went for '50' immediately, without any
+  possibility of revisiting our decision. A way to fix this is to
+  allow backtracking. If a coin fits we give it a go and proceed
+  having removed that coin. However, if that fails, we backtrack and
+  try skipping over that coin.
+
+  To program this in Haskell, we use a 'case' expression to try using
+  a coin. If it fails (returns 'Nothing') we try again skipping over
+  this coin: -}
 
 makeChange :: [Coin] -> [Coin] -> Int -> Maybe [Coin]
 makeChange coins        used 0 = Just used
@@ -539,12 +760,113 @@ makeChange (coin:coins) used amount
   | otherwise =
     makeChange coins used amount
 
+{- This fixed function works on both examples:
+
+       *Week02> makeChange [50,20,20,10,2,2,1] [] 54
+       Just [2,2,50]
+       *Week02> makeChange [50,20,20,11,2,1] [] 54
+       Just [1,2,11,20,20]
+-}
 
 {------------------------------------------------------------------------------}
 {- TUTORIAL QUESTIONS                                                         -}
 {------------------------------------------------------------------------------}
 
--- QUESTION: counting the number of occurrences of an element
--- QUESTION: insertion without duplication
--- QUESTION: removal of all duplicates
--- QUESTION: mergesort
+{- In the questions below, replace 'undefined' with your answers. Use
+   GHCi to test them.-}
+
+{- 1. Write a function that counts the number of occurrences of an
+      element in list: -}
+
+popCount :: Eq a => a -> [a] -> Int
+popCount = undefined
+
+{-    (popCount is short for "population count"). Examples:
+
+         popCount 2 [1,2,5,2,7,2,9] == 3
+         popCount 9 [1,2,5,2,7,2,9] == 1
+         popCount 0 [1,2,5,2,7,2,9] == 0
+-}
+
+
+{- 2. Write a version of 'insert' that only inserts into a sorted list
+      if the element is not already there. Examples:
+
+         insertNoDup 2 [1,3,4]   == [1,2,3,4]
+         insertNoDup 2 [1,2,3,4] == [1,2,3,4]
+-}
+
+insertNoDup :: Ord a => a -> [a] -> [a]
+insertNoDup = undefined
+
+
+{- 3. Write a version of 'remove' that removes all copies of an element
+      from a sorted list, not just the first one. Examples:
+
+         removeAll 2 [1,2,2,3] == [1,3]
+         removeAll 2 [1,3]     == [1,3]
+-}
+
+removeAll :: Ord a => a -> [a] -> [a]
+removeAll = undefined
+
+
+{- 4. Rewrite 'treeFind' and 'treeInsert' to use 'compare' and 'case'
+      expressions. -}
+
+treeFind2 :: Ord k => k -> KV k v -> Maybe v
+treeFind2 = undefined
+
+treeInsert2 :: Ord k => k -> v -> KV k v -> Maybe v
+treeInsert2 = undefined
+
+
+{- 5. MergeSort is another sorting algorithm that works in the following
+      way:
+
+      - If the list to be sorted is zero length, then it is already
+        sorted.
+
+      - If the list to be sorted has one element, then it is already
+        sorted.
+
+      - Otherwise, split the list into two, one with the even elements
+        and one with the odd elements. Sort the two lists by calling
+        'mergeSort' recursively. Then merge the two lists together
+        maintaining the ordering.
+
+      Write this function in three parts: -}
+
+{-    'split' splits the input into two lists: one with the odd numbered
+      elements and one with the even numbered elements. HINT: you can
+      pattern match on multiple elements at the head of a list with
+      'x1:x2:xs', and you can use the '(odds,evens) = ...' syntax in a
+      'where' clause. -}
+
+split :: [a] -> ([a], [a])
+split = undefined
+
+{-    'merge' merges two sorted lists into one sorted list. Examples:
+
+          merge [1,3,5] [2,4,6]  = [1,2,3,4,5,6]
+          merge [1,3,5] [7,9,11] = [1,3,5,7,9,11]
+-}
+
+merge :: Ord a => [a] -> [a] -> [a]
+merge = undefined
+
+{-    'mergeSort' uses 'split' and 'merge' to implement the merge sort
+      algorithm described above. -}
+
+mergeSort :: Ord a => [a] -> [a]
+mergeSort = undefined
+
+
+{- 6. Write another version of 'makeChange' that returns all the
+      possible ways of making change as a list: -}
+
+makeChangeAll :: [Coin] -> [Coin] -> Int -> [[Coin]]
+makeChangeAll = undefined
+
+{- HINT: you don't need a case expression, just a way of appending two
+   lists of possibilities. -}
