@@ -445,18 +445,77 @@ treeInsert k v (Node l (k',v') r)
 
 
 
-{-!      Part 2.6 : BACKTRACKING SEARCH -}
+{-!      Part 2.6 : BACKTRACKING SEARCH AND CASE EXPRESSIONS -}
 
+
+
+treeMember2 :: Ord a => a -> BST a -> Bool
+treeMember2 x Leaf = False
+treeMember2 x (Node l y r) =
+  case compare x y of
+    EQ -> True
+    LT -> treeMember2 x l
+    GT -> treeMember2 x r
+
+-- case <expression> of
+--   <pattern1> -> <code1>
+--   ...
+--   <patternN> -> <codeN>
+
+
+
+
+
+
+
+
+
+
+{-! Making change
+
+  If we have the coins
+
+     [50,20,20,10,2,2,1,1]
+
+  and we want to make 54p, then there are four ways:
+
+   - [2,2,50]
+   - [1,1,2,50]
+   - [2,2,10,20,20]
+   - [1,1,2,10,20,20]
+-}
+
+
+
+
+
+
+
+
+
+
+
+
+{-! Making change function -}
 
 type Coin = Int
 
-ukCoins :: [Coin]
-ukCoins = [50,20,10,5,2,1]
+testCoins :: [Coin]
+testCoins = [50,20,20,10,2,2,1,1]
 
 makeChange :: [Coin] -> [Coin] -> Int -> Maybe [Coin]
-makeChange coins     used 0 = Just used
-makeChange []        used n = Nothing
-makeChange (c:coins) used n
-  | c <= n    = makeChange coins (c:used) (n-c)
+makeChange coins        used 0 = Just used
+makeChange []           used n = Nothing
+makeChange (coin:coins) used n
+  | coin <= n = case makeChange coins (coin:used) (n - coin) of
+                  Nothing -> makeChange coins used n
+                  Just change -> Just change
   | otherwise = makeChange coins used n
 
+-- makeChange [50,20,20,11,2,1] [] 54
+-- makeChange [20,20,11,2,1] [50] 4
+-- ...
+-- makeChange [2,1] [50] 4
+-- makeChange [1] [2,50] 2
+-- makeChange [] [1,2,50] 1
+-- Nothing
