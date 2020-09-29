@@ -817,7 +817,7 @@ removeAll = undefined
 treeFind2 :: Ord k => k -> KV k v -> Maybe v
 treeFind2 = undefined
 
-treeInsert2 :: Ord k => k -> v -> KV k v -> Maybe v
+treeInsert2 :: Ord k => k -> v -> KV k v -> KV k v
 treeInsert2 = undefined
 
 
