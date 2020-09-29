@@ -4,14 +4,14 @@ module Week04 where
 
 import Prelude hiding (foldr, foldl, Maybe (..), Left, Right, filter, zip)
 
-{-   WEEK 4 : PATTERNS OF RECURSION
+{-   WEEK 04 : PATTERNS OF RECURSION
 
-   In Week 3 we looked at some ways that higher order functions can be
-   used to combine common patterns of behaviour into single functions
-   that are specialised by supplying the right functions to them. Our
-   main examples were abstracting the idea of applying a function to
-   every element of a list to get a new list ('map') and filtering a
-   list based on some condition ('filter').
+   In Week 03 we looked at some ways that higher order functions can
+   be used to combine common patterns of behaviour into single
+   functions that are specialised by supplying the right functions to
+   them. Our main examples were abstracting the idea of applying a
+   function to every element of a list to get a new list ('map') and
+   filtering a list based on some condition ('filter').
 
    We will now look at some more examples of higher order functions
    that capture common patterns. The key common factor is patterns of
@@ -20,13 +20,11 @@ import Prelude hiding (foldr, foldl, Maybe (..), Left, Right, filter, zip)
    similar to the idea of the Visitor pattern in OO languages. -}
 
 
-{-    PART 1 : FOLD RIGHT
-
-     FIXME: title
+{-    PART 1 : FOLDING RIGHT
 
    Most of the functions we have written so far in this course have
    been recursive, because this is the way that Haskell deals with
-   data of arbitrary size. In Lecture 01, we saw the 'total' function,
+   data of arbitrary size. In Week 01, we saw the 'total' function,
    which sums up the integers in a list of integers: -}
 
 total :: [Int] -> Int
@@ -241,8 +239,8 @@ foldl f a (x:xs) = foldl f (f a x) xs
 
    'foldl' captures the pattern of iterating through a list, updating
    some piece of state as we go. As an illustrative example, let's
-   take the 'Direction' data type from Week 01, and the Position type
-   from Week FIXME: -}
+   take the 'Direction' data type from Week 01, and a Position type
+   that represents positions as a pair of 'X' and 'Y' coordinates: -}
 
 data Direction = Up | Down | Left | Right
   deriving Show

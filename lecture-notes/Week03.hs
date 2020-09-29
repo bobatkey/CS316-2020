@@ -11,11 +11,11 @@ import Prelude hiding ((.), map, filter)
    solve one specific problem into more general programs that solve
    whole classes of problems.
 
-   Haskell programs can pass values like integers and strings to and
-   from functions, and store them in structures like lists and
-   trees. Haskell treats functions no differently from any other kind
-   of data: functions can be returned as the result of functions,
-   passed into functions, and stored in data structures. -}
+   Haskell programs can pass values like integers, strings, lists and
+   trees to and from functions, and store them in structures like
+   lists and trees. Haskell treats functions no differently from any
+   other kind of data: functions can be returned as the result of
+   functions, passed into functions, and stored in data structures. -}
 
 
 {-    PART 3.1 : FUNCTIONS THAT RETURN FUNCTIONS
@@ -69,9 +69,9 @@ addTen2 x = add 10 x
    a definition of 'add' using the '\x -> E' notation for
    functions.
 
-   (The backslash '\' is meant to be an ASCII
-   representation of a Greek lambda, because 'lambda' is a commonly
-   used mathematical notation for writing anonymous functions.)
+   (The backslash '\' is meant to be an ASCII representation of a
+   Greek lambda, because 'lambda' is a commonly used notation for
+   writing anonymous functions.)
 
    An expression of the form '\x -> E' stands for "a function that
    takes an argument, which we call 'x', and returns 'E'". We write
@@ -213,7 +213,19 @@ quadruple2 = twice (applyCopy add)
 octtuple :: Int -> Int
 octtuple = twice quadruple
 
-{- FIXME: another example of twice. -}
+{- 'twice' can be applied to any function whose return type is the same
+   as its input type. For example, reversing twice is the same as
+   doing nothing:
+
+       *Week03> twice reverse [1,2,3,4]
+       [1,2,3,4]
+
+   But adding 10 twice adds 20:
+
+       *Week03> twice (\x -> x + 10) 0
+       20
+-}
+
 
 {-    PART 3.3 : MAP AND FILTER -}
 
@@ -278,14 +290,44 @@ onlyEvens = filter (\x -> x `mod` 2 == 0)
 
 {- The functions 'map' and 'filter' are a useful pair of tools for
    building functions that work on lists, without having to write
-   similar looking code over and over again. -}
+   similar looking code over and over again.
 
--- FIXME: larger and smaller from the quicksort example
+   For example, in the quickSort function from Week 02, we had:
+
+     qsort :: Ord a => [a] -> [a]
+     qsort []     = []
+     qsort (x:xs) = qsort smaller ++ [x] ++ qsort larger
+        where smaller = [ y | y <- xs, y < x ]
+              larger  = [ y | y <- xs, y >= x ]
+
+   we can rewrite the two list comprehensions as filters instead: -}
+
+qsort :: Ord a => [a] -> [a]
+qsort []     = []
+qsort (x:xs) = qsort smaller ++ [x] ++ qsort larger
+  where smaller = filter (\y -> y < x) xs
+        larger  = filter (\y -> y >= x) xs
+
+{- Which of these is clearer depends on the reader ;) -}
+
 
 {-    PART 3.4 : MAP FOR TREES AND MAYBE -}
 
+data Tree a
+  = Leaf
+  | Node (Tree a) a (Tree a)
+  deriving Show
 
--- FIXME
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree f Leaf         = Leaf
+mapTree f (Node l x r) = Node (mapTree f l) (f x) (mapTree f r)
+
+mapMaybe :: (a -> b) -> Maybe a -> Maybe b
+mapMaybe f Nothing  = Nothing
+mapMaybe f (Just a) = Just (f a)
+
+
+{- FIXME: PROPERTIES OF MAP -}
 
 
 {-    PART 3.5 : USEFUL HIGHER ORDER FUNCTIONS
@@ -298,7 +340,7 @@ compose :: (b -> c) -> (a -> b) -> a -> c
 compose f g x = f (g x)
 
 {- 'compose' is so useful that the Haskell standard library calls it
-   '.', and it is written infix (i.e., between its arguments. The '.'
+   '.', and it is written infix (in between its arguments). The '.'
    is meant to mimic in ASCII the mathematical circle notation for
    function composition.
 
@@ -340,65 +382,216 @@ pipeline = map fst . filter (\(s,i) -> s == "CS316")
 pipeline2 :: [(String,Int)] -> Int
 pipeline2 = length . filter (\(s,i) -> s == "CS316")
 
-{- An example of a longer pipeline is the following, which selects every
-   other element from a list: -}
+{- Q.9 Backwards application
 
-everyOther :: [a] -> [a]
-everyOther = map snd . filter (\ (i,x) -> i `mod` 2 == 1) . zip [0..]
+   Write a function of the following type that takes a value 'x' and a
+   function 'f' and applies 'f' to 'x'. Note that this functions takes
+   its arguments in reverse order to normal function application! -}
 
-{- How does this work? Let's break it down:
-
-     1. First, we pair every element in the input list with its index
-        by zipping with the infinite list [0..] (remember how we did
-        this in Lecture 03)
-
-     2. Then we filter to get only the element of the list with odd
-        index.
-
-     3. Then we map 'snd' over the list to throw away the indexes and
-        keep the data.
-
-   Graphically, we can visualise the pipeline as follows, with types
-   for the intermediate stages:
-
-       zip               filter (...)              map snd
-   [a] ---> [(Int, a)] ----------------> [(Int,a)] --------> [a]
-
-   Unfortunately, 'everyOther' isn't particularly efficient. In any
-   list of reasonable size, we'll be generating quite large numbers
-   when all we are really interested in is whether or not they are
-   odd.
-
-   An alternative strategy is to zip with the infinite list
-
-       [False, True, False, True, False, True, ...]
-
-   This will produce a list like:
-
-       [(False, x1), (True, x2), (False, x3), (True, x4), ...]
-
-   Keeping the elements with 'True' in the first element will yield:
-
-       [(True, x2), (True, x4), (True, x6), ...]
-
-   And mapping 'snd' will give us:
-
-       [x2, x4, x6, ...]
-
-   as we want.
-
-   Happily, the Haskell standard library function 'cycle' can produce
-   infinite lists like [False, True, False, True, ...]. Given any
-   finite list 'l', 'cycle l' repeats that list over and over again
-   forever. We can use 'cycle' to code up this alternative strategy
-   for 'everyOther': -}
-
-everyOther2 :: [a] -> [a]
-everyOther2 =  map snd . filter fst . zip (cycle [False, True])
+(|>) :: a -> (a -> b) -> b
+(|>) x f = undefined
 
 
+{- This function can be used between its arguments like so:
 
-{-    PART 3.6 : PROPERTIES OF MAP -}
+       "HELLO" |> map toLower
+
+   and it is useful for chaining calls left-to-right instead of
+   right-to-left as is usual in Haskell:
+
+       "EIEIO" |> filter onlyEs |> length
+-}
 
 
--- FIXME
+{- Q.10 Flipping
+
+   Write a function that takes a two argument function as an input,
+   and returns a function that does the same thing, but takes its
+   arguments in reverse order: -}
+
+flip :: (a -> b -> c) -> b -> a -> c
+flip  = undefined
+
+
+{------------------------------------------------------------------------------}
+{- TUTORIAL QUESTIONS                                                         -}
+{------------------------------------------------------------------------------}
+
+{- 1. Lambda notation.
+
+   Rewrite the following functions using the '\x -> e' notation (the
+   "lambda" notation), so that they are written as 'double =
+   <something>', and so on. -}
+
+double :: Int -> Int
+double x = 2*x
+
+mul :: Int -> Int -> Int
+mul x y = x * y
+
+invert :: Bool -> Bool
+invert True  = False
+invert False = True
+  {- HINT: use a 'case', or an 'if'. -}
+
+
+{- 2. Partial Application
+
+   The function 'mul' defined above has the type 'Int -> Int ->
+   Int'. (a) What is the type of the Haskell expression:
+
+       mul 10
+
+   (b) what is 'mul 10'? How can you use it to multiply a number? -}
+
+
+{- 3. Partial Application
+
+   Write the 'double' function above using 'mul'. Can you make your
+   function as short as possible? -}
+
+double_v2 :: Int -> Int
+double_v2 = undefined -- fill this in
+
+{- 4. Using 'map'.
+
+   The function 'toUpper' takes a 'Char' and turns lower case
+   characters into upper cases one. All other characters it returns
+   unmodified. For example:
+
+       > toUpper 'a'
+       'A'
+       > toUpper 'A'
+       'A'
+
+   Strings are lists of characters. 'map' is a function that applies a
+   function to every character in a list and returns a new list.
+
+   Write the function 'shout' that uppercases a string, so that:
+
+      > shout "hello"
+      "HELLO"
+-}
+
+shout :: String -> String    -- remember that String = [Char]
+shout = undefined
+
+
+{- 5. Using 'map' with another function.
+
+   The function 'concat' does what the function 'concatLists' from
+   Exercise 1 did:
+
+      > concat [[1,2],[3,4],[5,6]]
+      [1,2,3,4,5,6]
+
+   Using 'map', 'concat', and either a helper function or a function
+   written using '\', write a function 'dupAll' that duplicates every
+   element in a list. For example:
+
+      > dupAll [1,2,3]
+      [1,1,2,2,3,3]
+      > dupAll "my precious"
+      "mmyy  pprreecciioouuss"
+
+   HINT: try writing a helper function that turns single elements into
+   two element lists. -}
+
+dupAll :: [a] -> [a]
+dupAll = undefined
+
+
+{- 6. Using 'filter'
+
+   (a) Use 'filter' to return a list of consisting of only the 'E's in
+       a 'String'.
+
+   (b) Use 'onlyEs' and 'length' to count the number of 'E's in a string.
+
+   (c) Write a single function that takes a character 'c' and a string
+       's' and counts the number of 'c's in 's'. -}
+
+onlyEs :: String -> String
+onlyEs = undefined
+
+numberOfEs :: String -> Int
+numberOfEs = undefined
+
+numberOf :: Char -> String -> Int
+numberOf = undefined
+
+
+{- 7. Rewriting 'filter'
+
+   (a) Write a function that does the same thing as filter, using
+      'map' and 'concat'.
+
+   (b) Write a function that does a 'map' and a 'filter' at the same
+       time, again using 'map' and 'concat'.
+-}
+
+filter_v2 :: (a -> Bool) -> [a] -> [a]
+filter_v2 = undefined
+
+filterMap :: (a -> Maybe b) -> [a] -> [b]
+filterMap = undefined
+
+
+{- 8. Evaluating Formulas
+
+   Here is a datatype describing formulas in propositional logic, as
+   in CS208 last year. Atomic formulas are represented as 'String's. -}
+
+data Formula
+  = Atom String
+  | And  Formula Formula
+  | Or   Formula Formula
+  | Not  Formula
+  deriving Show
+
+{- (a) Write a function that evaluates a 'Formula' to a 'Bool'ean value,
+       assuming that all the atomic formulas are given the value
+       'True'. Note that the following Haskell functions do the basic
+       operations on 'Bool'eans:
+
+           (&&) :: Bool -> Bool -> Bool    -- 'AND'
+           (||) :: Bool -> Bool -> Bool    -- 'OR'
+           not  :: Bool -> Bool            -- 'NOT'
+-}
+
+eval_v1 :: Formula -> Bool
+eval_v1 = undefined
+
+
+
+
+{- (b) Now write a new version of 'eval_v1' that, instead of evaluating
+       every 'Atom a' to 'True', takes a function that gives a 'Bool'
+       for each atomic proposition: -}
+
+eval :: Formula -> (String -> Bool) -> Bool
+eval = undefined
+
+
+{- 9. Substituting Formulas
+
+   Write a function that, given a function 's' that turns 'String's
+   into 'Formula's (a "substitution"), replaces all the atomic
+   formulas in a Formula with whatever 'f' tells it to: -}
+
+subst :: (String -> Formula) -> Formula -> Formula
+subst = undefined
+
+
+{- 10. Composition
+
+   Write a function '>>>' that composes two functions: takes two
+   functions 'f' and 'g', and returns a function that first runs 'f'
+   on its argument, and then runs 'g' on the result.
+
+   HINT: this is similar to the function 'compose' above. -}
+
+(>>>) :: (a -> b) -> (b -> c) -> a -> c
+(>>>) = undefined
+
+{- Try rewriting the 'numberOfEs' function from above using this one. -}
