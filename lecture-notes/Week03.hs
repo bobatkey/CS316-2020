@@ -423,8 +423,8 @@ flip  = undefined
    "lambda" notation), so that they are written as 'double =
    <something>', and so on. -}
 
-double :: Int -> Int
-double x = 2*x
+--double :: Int -> Int
+--double x = 2*x
 
 mul :: Int -> Int -> Int
 mul x y = x * y
