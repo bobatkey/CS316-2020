@@ -920,10 +920,10 @@ flipHorizontally Down  = Down
       input: -}
 
 pairOfEqualDirections :: Pair Direction Direction -> Bool
-pairOfEqualDirections (Pair Up    Up)    = True
-pairOfEqualDirections (Pair Down  Down)  = True
-pairOfEqualDirections (Pair Left  Left)  = True
-pairOfEqualDirections (Pair Right Right) = True
+pairOfEqualDirections (MkPair Up    Up)    = True
+pairOfEqualDirections (MkPair Down  Down)  = True
+pairOfEqualDirections (MkPair Left  Left)  = True
+pairOfEqualDirections (MkPair Right Right) = True
 
 {- 4. Define a datatype 'Triple a b c' for values that have three
       components. Write functions 'get1of3 :: Triple a b c -> a',
