@@ -960,9 +960,9 @@ isA _   = False
       (Strings in Haskell are really lists of 'Char's) -}
 
 dropSpaces :: [Char] -> [Char]
-dropSpaces []        = []
-dropSpaces (' '::xs) = dropSpaces xs
-dropSpaces xs        = xs
+dropSpaces []       = []
+dropSpaces (' ':xs) = dropSpaces xs
+dropSpaces xs       = xs
 
 {- Alternatively:
 
