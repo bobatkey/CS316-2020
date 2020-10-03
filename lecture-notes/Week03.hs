@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 module Week03 where
 
-import Prelude hiding ((.), map, filter)
+import Prelude hiding ((.), map, filter, id)
 
 {-    WEEK 3 : HIGHER ORDER FUNCTIONS
 
@@ -18,7 +18,7 @@ import Prelude hiding ((.), map, filter)
    functions, passed into functions, and stored in data structures. -}
 
 
-{-    PART 3.1 : FUNCTIONS THAT RETURN FUNCTIONS
+{-    Part 3.1 : FUNCTIONS THAT RETURN FUNCTIONS
 
    First, we will look at how functions can return functions as
    results.
@@ -99,16 +99,55 @@ fst2 = \(a,b) -> a
 
 {- (Look at the coincidence between the type and the program!)
 
-   The '\'/lambda notation for functions may seem a bit pointless so
-   far. Everything we've written using this notation could have been
-   written more simply by placing the argument names to the left of
-   the '='s. The advantage of the '\' lambda notation is that it
+   The '\' or 'lambda' notation for functions may seem a bit pointless
+   so far. Everything we've written using this notation could have
+   been written more simply by placing the argument names to the left
+   of the '='s. The advantage of the '\' lambda notation is that it
    allows us to write functions without needing to give them
    names. We'll see why this is important after we look at functions
    that take other functions as input. -}
 
+{- One useful consequence of the way that Haskell represents
+   multi-argument functions as functions that return other functions
+   is that we can use functions that are applied to fewer arguments
+   than they are expecting to reuse a function to create other
+   functions.
 
-{-    PART 3.2 : FUNCTIONS THAT TAKE FUNCTIONS AS INPUTS
+   For example, if we make a function that takes two strings and
+   appends them with a colon between them, then we can use this to
+   prefix messages with what kind of message they are: -}
+
+prefixWith :: String -> String -> String
+prefixWith prefix str = prefix ++ ": " ++ str
+
+{- For example:
+
+      *Week03> prefixWith "ERROR" "Building on fire"
+      "ERROR: Building on fire"
+      *Week03> prefixWith "LOG" "Building burnt down"
+      "LOG: Building burnt down"
+
+   To avoid having to repeatedly say "ERROR" and "LOG", with the
+   possibilty that we might mistype it occasionally, we can use
+   partially applied functions to create specialised versions of
+   'prefixWith' for error and log messages: -}
+
+errorMessage :: String -> String
+errorMessage = prefixWith "ERROR"
+
+logMessage :: String -> String
+logMessage = prefixWith "LOG"
+
+{- And use them like this to get more readable code:
+
+      *Week03> errorMessage "Building on fire"
+      "ERROR: Building on fire"
+      *Week03> logMessage "Building burnt down"
+      "LOG: Building burnt down"
+-}
+
+
+{-    Part 3.2 : FUNCTIONS THAT TAKE FUNCTIONS AS INPUTS
 
    As I said in the introduction, Haskell treats functions as it does
    any other kind of value. The can be returned by functions, as we
@@ -179,24 +218,7 @@ quadruple x = double (double x)
    the specific 'double' to a general 'f' to make the 'twice'
    function, which applies a function to an argument, and then applies
    it again. Only this time, we also make the type more general --
-   there is nothing specific to 'Int's in the definition of 'twice' so
-   we can replace the specific 'Int' by the general 'a': -}
-
-twice :: (a -> a) -> a -> a
-twice f x = f (f x)
-
-{-    EXERCISE: what is the more general type for 'applyCopy' above?
-
-   We needn't always work out the more general type for ourselves. We
-   can ask GHCi to do it for us:
-
-      Prelude> :t twice
-      (t -> t) -> t -> t
-
-   As with 'applyCopy' above, we can recover 'quadruple' by applying
-   twice to 'double', or any other way of writing 'double' that we can
-   think of. This is where the anonymous '\'/lambda notation comes in
-   very useful for writing short functions that are only mentioned
+   t
    once without needing to think of a name. We can write 'double' as
    '\x -> x + x', which in some contexts may be clearer than the word
    'double'. -}
@@ -227,12 +249,12 @@ octtuple = twice quadruple
 -}
 
 
-{-    PART 3.3 : MAP AND FILTER -}
+{-    Part 3.3 : MAP AND FILTER -}
 
 {- One of the most useful places to use higher-order functions is to
    make general functions for processing containers full of
-   data. Here, we will concentrate on lists. Let's see how to make some
-   reusable functions on lists by following the same
+   data. Here, we will concentrate on lists. Let's see how to make
+   some reusable functions on lists by following the same
    specific-to-general methodology that we did above.
 
    Here is a function that doubles every element of a list of
@@ -311,43 +333,59 @@ qsort (x:xs) = qsort smaller ++ [x] ++ qsort larger
 {- Which of these is clearer depends on the reader ;) -}
 
 
-{-    PART 3.4 : MAP FOR TREES AND MAYBE -}
+{-     Part 3.4 : COMPOSITION AND IDENTITY
 
-data Tree a
-  = Leaf
-  | Node (Tree a) a (Tree a)
-  deriving Show
+   Let's start by looking at one of the questions from the Week 01
+   tutorial. You were asked to write 'dropSpace' and then use it to
+   write 'dropTrailingSpaces'. One way of writing them is like this: -}
 
-mapTree :: (a -> b) -> Tree a -> Tree b
-mapTree f Leaf         = Leaf
-mapTree f (Node l x r) = Node (mapTree f l) (f x) (mapTree f r)
+dropSpaces :: String -> String
+dropSpaces []       = []
+dropSpaces (' ':xs) = dropSpaces xs
+dropSpaces xs       = xs
 
-mapMaybe :: (a -> b) -> Maybe a -> Maybe b
-mapMaybe f Nothing  = Nothing
-mapMaybe f (Just a) = Just (f a)
+dropTrailingSpaces :: String -> String
+dropTrailingSpaces xs = reverse (dropSpaces (reverse xs))
 
+{- 'dropTrailingSpaces' is an example of function composition: making a
+   function by plugging functions together so that output of one goes
+   into the input of another. Here we have three functions composed
+   together: 'reverse', then 'dropSpaces', and 'reverse' (reading
+   right to left).
 
-{- FIXME: PROPERTIES OF MAP -}
-
-
-{-    PART 3.5 : USEFUL HIGHER ORDER FUNCTIONS
-
-   Now that we have reusable functions for transforming lists, we need
-   a way to plug them together. We do this by 'composing' two
-   functions using the 'compose' function: -}
+   This is such a common pattern, that it is worth writing another
+   function that takes functions as input to capture it: -}
 
 compose :: (b -> c) -> (a -> b) -> a -> c
 compose f g x = f (g x)
 
-{- 'compose' is so useful that the Haskell standard library calls it
-   '.', and it is written infix (in between its arguments). The '.'
-   is meant to mimic in ASCII the mathematical circle notation for
-   function composition.
+{- 'compose' takes a function 'f :: b -> c', a function 'g :: a -> b',
+    and a value 'x :: a' then feeds 'x' to 'g' to get a 'b' value, and
+    then feeds that value to 'f' to finally get a 'c' value.
+
+   We can rewrite 'dropTrailingSpaces' in terms of compose like so: -}
+
+dropTrailingSpaces2 :: String -> String
+dropTrailingSpaces2 = compose reverse (compose dropSpaces reverse)
+
+{- which makes clear that it is the composition of three functions.
+
+   Writing it like this isn't much clear as it is, but 'compose' is so
+   useful that the Haskell standard library calls it '.', and it is
+   written infix (in between its arguments). The '.'  is meant to
+   mimic in ASCII the mathematical circle notation for function
+   composition.
 
    Here is a definition of '.', written using the '\'/lambda notation: -}
 
 (.) :: (b -> c) -> (a -> b) -> a -> c
 f . g = \x -> f (g x)
+
+{- With this, we get the following clearer definition of
+   'dropTrailingSpaces': -}
+
+dropTrailingSpaces3 :: String -> String
+dropTrailingSpaces3 = reverse . dropSpaces . reverse
 
 {- Function composition is especially useful for creating 'pipelines'
    that plug together several basic functions for processing lists
@@ -361,7 +399,7 @@ f . g = \x -> f (g x)
    fields from each line (here "-f1" indicates that we want the first
    field).
 
-      grep CS316 registered-students.txt | cut -f1
+      grep CS316 | cut -f1 < registered-students.txt
 
     In Haskell, we replace 'grep' with 'filter', and 'cut' with 'map
     fst' to get the following, where we've used function composition
@@ -382,35 +420,107 @@ pipeline = map fst . filter (\(s,i) -> s == "CS316")
 pipeline2 :: [(String,Int)] -> Int
 pipeline2 = length . filter (\(s,i) -> s == "CS316")
 
-{- Q.9 Backwards application
 
-   Write a function of the following type that takes a value 'x' and a
-   function 'f' and applies 'f' to 'x'. Note that this functions takes
-   its arguments in reverse order to normal function application! -}
+{- Function composition is a form of 'multiplication' for functions: we
+   can 'multiply' two functions by composing them. (If you know about
+   Linear Algebra and Matrices, then think about how multiplying two
+   matrices has the same effect as composing the linear functions that
+   they represent.)
 
-(|>) :: a -> (a -> b) -> b
-(|>) x f = undefined
+   So what is the equivalent of '1'?
+
+   It is identity function, which "does nothing" by returning its
+   argument unaffected: -}
+
+id :: a -> a
+id x = x
 
 
-{- This function can be used between its arguments like so:
+{-     Part 3.5 : MAP FOR OTHER DATATYPES -}
 
-       "HELLO" |> map toLower
+{- FIXME: to be completed. See Video 3.5 for now. -}
 
-   and it is useful for chaining calls left-to-right instead of
-   right-to-left as is usual in Haskell:
+{- map for Trees -}
 
-       "EIEIO" |> filter onlyEs |> length
+data Tree a
+  = Leaf
+  | Node (Tree a) a (Tree a)
+  deriving Show
+
+mapTree :: (a -> b) -> Tree a -> Tree b
+mapTree f Leaf         = Leaf
+mapTree f (Node l x r) = Node (mapTree f l) (f x) (mapTree f r)
+
+{- Maybe as a container -}
+
+{-
+data Maybe a
+  = Nothing
+  | Just a
+  deriving Show
 -}
 
+mapMaybe :: (a -> b) -> Maybe a -> Maybe b
+mapMaybe f Nothing  = Nothing
+mapMaybe f (Just a) = Just (f a)
 
-{- Q.10 Flipping
+{- Containers with values for every string -}
 
-   Write a function that takes a two argument function as an input,
-   and returns a function that does the same thing, but takes its
-   arguments in reverse order: -}
+data WithString a
+  = MkWithString (String -> a)
 
-flip :: (a -> b -> c) -> b -> a -> c
-flip  = undefined
+lengths :: WithString Int
+lengths = MkWithString (\s -> length s)
+
+valueOf :: String -> WithString a -> a
+valueOf s (MkWithString f) = f s
+
+
+mapWithString :: (a -> b) -> WithString a -> WithString b
+mapWithString f (MkWithString h) = MkWithString (\s -> f (h s))
+
+{- A non-example -}
+
+data Fun = MkFun (a -> a)
+
+mapFun :: (a -> b) -> MkFun a -> MkFun b
+mapFun f (MkFun h) = MkFun id
+
+{- This seems to be a valid definition of a 'map' for the type
+   constructor 'Fun'. But somehow it doesn't seem right: if we
+   intuitively think of fmap as altering all of the values stored in a
+   container whilst maintaining the structure, then it seems odd to
+   always return the same answer -- the 'id' function in this case.
+
+   To exclude this kind of dodgy definition, we require that 'map'
+   functions should always obey two equational laws that intuitively
+   state that 'map' does do modification of values and not the shapes
+   of structures.
+
+   The laws are:
+
+      1. map id c == c
+
+         Mapping the identity function over a container should not
+         affect the container or its values at all. This is reasonable
+         -- if we do nothing to the values stored in the container,
+         then the whole thing should be unaffected.
+
+      2. map f (map g c) == map (f . g) c
+
+         If we map a function 'g' over a container, and then map a
+         function 'f' over the result, then that ought to be the same
+         as just mapping their composition. Again, this is reasonable:
+         if we are leaving the structure of a container untouched,
+         then it shouldn't matter how many times we traverse over it
+         to alter the values stored in it.
+
+   We can now see that 'mapFun' for 'Fun' defined above fails the
+   first law. We have:
+
+      fmap id (MkFun g) = MkFun id
+
+   but, to satisfy the first law, the result ought to be 'MkFun g'. -}
 
 
 {------------------------------------------------------------------------------}
@@ -423,8 +533,8 @@ flip  = undefined
    "lambda" notation), so that they are written as 'double =
    <something>', and so on. -}
 
---double :: Int -> Int
---double x = 2*x
+mulBy2 :: Int -> Int
+mulBy2 x = 2*x
 
 mul :: Int -> Int -> Int
 mul x y = x * y
@@ -447,7 +557,7 @@ invert False = True
 
 {- 3. Partial Application
 
-   Write the 'double' function above using 'mul'. Can you make your
+   Write the 'mulBy2' function above using 'mul'. Can you make your
    function as short as possible? -}
 
 double_v2 :: Int -> Int
@@ -480,7 +590,7 @@ shout = undefined
 {- 5. Using 'map' with another function.
 
    The function 'concat' does what the function 'concatLists' from
-   Exercise 1 did:
+   Exercise 1 does, but is built in to the library:
 
       > concat [[1,2],[3,4],[5,6]]
       [1,2,3,4,5,6]
@@ -494,8 +604,8 @@ shout = undefined
       > dupAll "my precious"
       "mmyy  pprreecciioouuss"
 
-   HINT: try writing a helper function that turns single elements into
-   two element lists. -}
+   HINT: try writing a helper function that turns single data values
+   into two element lists. -}
 
 dupAll :: [a] -> [a]
 dupAll = undefined
@@ -569,8 +679,14 @@ eval_v1 = undefined
        every 'Atom a' to 'True', takes a function that gives a 'Bool'
        for each atomic proposition: -}
 
-eval :: Formula -> (String -> Bool) -> Bool
+eval :: (String -> Bool) -> Formula -> Bool
 eval = undefined
+
+{- For example:
+
+     eval (\s -> s == "A") (Or (Atom "A") (Atom "B"))  == True
+     eval (\s -> s == "A") (And (Atom "A") (Atom "B")) == False
+-}
 
 
 {- 9. Substituting Formulas
@@ -582,6 +698,10 @@ eval = undefined
 subst :: (String -> Formula) -> Formula -> Formula
 subst = undefined
 
+{- For example:
+
+     subst (\s -> if s == "A" then Not (Atom "A") else Atom s) (And (Atom "A") (Atom "B")) == And (Not (Atom "A")) (Atom "B")
+-}
 
 {- 10. Composition
 
@@ -595,3 +715,32 @@ subst = undefined
 (>>>) = undefined
 
 {- Try rewriting the 'numberOfEs' function from above using this one. -}
+
+{- 11. Backwards application
+
+   Write a function of the following type that takes a value 'x' and a
+   function 'f' and applies 'f' to 'x'. Note that this functions takes
+   its arguments in reverse order to normal function application! -}
+
+(|>) :: a -> (a -> b) -> b
+(|>) x f = undefined
+
+
+{- This function can be used between its arguments like so:
+
+       "HELLO" |> map toLower
+
+   and it is useful for chaining calls left-to-right instead of
+   right-to-left as is usual in Haskell:
+
+       "EIEIO" |> filter onlyEs |> length
+-}
+
+{- 12. Flipping
+
+   Write a function that takes a two argument function as an input,
+   and returns a function that does the same thing, but takes its
+   arguments in reverse order: -}
+
+flip :: (a -> b -> c) -> b -> a -> c
+flip  = undefined
