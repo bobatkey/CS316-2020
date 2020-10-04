@@ -223,6 +223,9 @@ quadruple x = double (double x)
    '\x -> x + x', which in some contexts may be clearer than the word
    'double'. -}
 
+twice :: (a -> a) -> a -> a
+twice f x = f (f x)
+
 quadruple2 :: Int -> Int
 quadruple2 = twice (applyCopy add)
       --     twice double
@@ -230,10 +233,10 @@ quadruple2 = twice (applyCopy add)
       --     twice (\x -> 2 * x)
 
 {- Because 'twice' is more general than 'quadruple', we can use it again
-   for new purposes. For example, octupling:-}
+   for new purposes. For example, sexdecupling (ie, multiplying by 16) :-}
 
-octtuple :: Int -> Int
-octtuple = twice quadruple
+sexdecuple :: Int -> Int
+sexdecuple = twice quadruple
 
 {- 'twice' can be applied to any function whose return type is the same
    as its input type. For example, reversing twice is the same as
@@ -481,9 +484,9 @@ mapWithString f (MkWithString h) = MkWithString (\s -> f (h s))
 
 {- A non-example -}
 
-data Fun = MkFun (a -> a)
+data Fun a = MkFun (a -> a)
 
-mapFun :: (a -> b) -> MkFun a -> MkFun b
+mapFun :: (a -> b) -> Fun a -> Fun b
 mapFun f (MkFun h) = MkFun id
 
 {- This seems to be a valid definition of a 'map' for the type
