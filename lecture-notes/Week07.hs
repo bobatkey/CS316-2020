@@ -31,7 +31,7 @@ ifThenElse False x y = y
    and give it a name: 'Monad'. -}
 
 
-{-    PART 1 : DEFINING MONADS
+{-    Part 7.11 : DEFINING MONADS
 
    In each of the three cases, we saw that there is common
    structure. Each one had a "do nothing" operation:
@@ -102,7 +102,7 @@ class Monad m where
    programs that use '>>=' ("bind"), called "'do' notation". -}
 
 
-{-    PART 2 : MAYBE MONAD
+{-    Part 7.2 : MAYBE MONAD
 
    In Lecture 10, we saw definitions of 'return' and 'ifOK' for
    'Maybe'. Let's now put them in an instance for the 'Monad' type
@@ -135,7 +135,7 @@ catch op handler =
 -- FIXME: do an example.
 
 
-{-    PART 3 : 'do' NOTATION
+{-    Part 7.3 : 'do' NOTATION
 
    In the previous two lectures, we've seen that using functions like
    'ifOK', 'andThen' and 'andThenWithPrinting', we can significantly
@@ -209,7 +209,7 @@ lookupAll_v2 kvs (Node l k r) =
 -- FIXME: bigger example, some pitfalls
 
 
-{-    PART 4 : STATE AND PRINTING MONAD
+{-    Part 7.4 : STATE AND PRINTING MONAD
 
    In Week 6, we defined a type synonym for "state mutating operation
    that returns a value of type 'a'":
@@ -310,7 +310,7 @@ add x y =
      return (x+y)
 
 
-{-    PART 5 : FUNCTIONS FOR ALL MONADS
+{-    Part 6.5 : FUNCTIONS FOR ALL MONADS
 
    We've already seen one benefit of declaring the 'Monad' type class:
    we can use 'do' notation to simplify programs that are best written
@@ -440,7 +440,7 @@ sumImp xs =
    of the state as a parameter? -}
 
 
-{-    PART 6 : APPLICATIVE FUNCTORS -}
+{-    Part 7.6 : APPLICATIVE FUNCTORS -}
 
 -- FIXME: Lec 16 -- do it briefly and then leave the parallel job stuff to
 -- additional lecture notes.

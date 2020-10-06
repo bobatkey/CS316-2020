@@ -925,7 +925,7 @@ mergeKVs = undefined
       getKey ["a","b"] (update ["a","b"] "x" emptyConfig)            == Just (Value "x")
       getKey ["a","b"] (update ["a","c"] "x" emptyConfig)            == Nothing
       getKey ["a"] (update ["a"] "y" (update ["a"] "x" emptyConfig)) == Just (Value "y")
-      getKey ["a"] (update [] "x" (update ["a"] "y" emptyConfig))    == Just (Value "y")
+      getKey ["a"] (update [] "x" (update ["a"] "y" emptyConfig))    == Nothing
 
    You should use 'set' and 'merge' to write 'update'. Doing it any
    other way will be a lot more work. -}

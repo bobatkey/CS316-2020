@@ -5,14 +5,14 @@ module Week09 where
 
 -- Lec13
 
-{-    PART 1 : INPUT / OUTPUT, CONCEPTUALLY -}
+{-    Part 9.1 : INPUT / OUTPUT, CONCEPTUALLY -}
 
-{-    PART 2 : OUTPUT AND INPUT -}
+{-    Part 9.2 : OUTPUT AND INPUT -}
 
-{-    PART 3 : REAL MUTABLE STATE -}
+{-    Part 9.3 : REAL MUTABLE STATE -}
 
-{-    PART 4 : FILE I/O -}
+{-    Part 9.4 : FILE I/O -}
 
-{-    PART 5 : DATA DEPENDENCIES AND PARALLELISM -}
+{-    Part 9.5 : DATA DEPENDENCIES AND PARALLELISM -}
 
 -- Lec16

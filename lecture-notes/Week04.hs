@@ -4,7 +4,7 @@ module Week04 where
 
 import Prelude hiding (foldr, foldl, Maybe (..), Left, Right, filter, zip)
 
-{-   WEEK 04 : PATTERNS OF RECURSION
+{-    WEEK 04 : PATTERNS OF RECURSION
 
    In Week 03 we looked at some ways that higher order functions can
    be used to combine common patterns of behaviour into single
@@ -20,7 +20,7 @@ import Prelude hiding (foldr, foldl, Maybe (..), Left, Right, filter, zip)
    similar to the idea of the Visitor pattern in OO languages. -}
 
 
-{-    PART 1 : FOLDING RIGHT
+{-    Part 4.1 : FOLDING RIGHT
 
    Most of the functions we have written so far in this course have
    been recursive, because this is the way that Haskell deals with
@@ -180,7 +180,7 @@ mapFilter' :: (a -> Maybe b) -> [a] -> [b]
 mapFilter' f xs = foldr undefined undefined xs
 
 
-{-    PART 2 : FOLD LEFT
+{-    Part 4.2 : FOLDING LEFT
 
    Above, I said that the name 'foldr' is short for "fold right". What
    is "fold"ing? and why "right"?
@@ -272,7 +272,7 @@ steps = [Up, Left, Down]
       (0,0) --Up--> (0,1) --Left--> (-1,1) --Down--> (-1,0)
 -}
 
-{-    PART 3 : FOLDING OTHER DATA TYPES
+{-    Part 4.3 : FOLDING OTHER DATA TYPES
 
    In Parts I and II, we've looked at folding over lists, from the
    right ('foldr') and from the left ('foldl'). The basic idea we
@@ -384,14 +384,17 @@ data Nat
    base case and a step case. -}
 
 
-{-    PART 4 : FOLD LEFT AND MONOIDS -}
+{-    Part 4.4 : FOLD LEFT AND MONOIDS -}
 
-{- FIXME: take material from Lec09 -}
+{- FIXME: take material from Lec09
+
+   Maybe leave until next week?
+-}
 
 
-{-    PART 5 : LIST COMPREHENSIONS
+{-    Part 4.5 : LIST COMPREHENSIONS
 
-   FIXME: tidy this up
+   FIXME: tidy this up, get rid of infinite lists and zip
 
    We have already seen that we can construct finite lists simply by
    giving an exhaustive list of their elements: -}
@@ -653,4 +656,209 @@ fibs = 1:1:[ x + y | x <- fibs | y <- tail fibs]
 
 
 
-{-    PART 6 : LIST COMPREHENSIONS FOR A SIMPLE DATABASE -}
+{-    Part 4.6 : LIST COMPREHENSIONS FOR A SIMPLE DATABASE
+
+-- FIXME: tidy this up
+
+   One can model databases in a simple manner as tables of key-value
+   pairs, and use list comprehensions as a quite readable query
+   language. Here is the "query" for looking up all values associated
+   with a given key in such a table: -}
+
+lookup :: Eq a => a -> [(a,b)] -> [b]
+lookup k t = [ b | (a,b) <- t, a == k ]
+
+{- It can be helpful to compare this with the SQL query
+
+     SELECT b
+       FROM t
+      WHERE a = k -}
+
+{- Here is a slightly bigger example, adapted from Simon Thompson's
+   book 'Haskell: The Craft of Functional Programming'. -}
+
+type Person = String
+type Book = String
+type Fee  = Integer
+
+{- We model a library database, keeping track of who has,
+   borrowed which book, and how much they owe in late fees.
+   A database is again just a table of tuples of data. -}
+
+type Database = [ (Person, Book, Fee) ]
+
+exampleDB :: Database
+exampleDB = [("Alice", "Tintin", 1)
+            ,("Anna","Little Women", 2)
+            ,("Alice","Asterix", 5)
+            ,("Rory","Tintin", 0)
+            ]
+
+{- The following "query" finds all books borrowed by a given
+   person: -}
+
+books :: Database -> Person -> [Book]
+books db per = [ book | (per', book, _) <- db, per == per' ]
+
+{- Again, compare with
+
+     SELECT book
+       FROM db
+      WHERE per = per'
+
+   As expected:
+
+      *Lec06> books exampleDB "Alice"
+      ["Tintin","Asterix"]
+
+   Note that writing -}
+
+booksWrong :: Database -> Person -> [Book]
+booksWrong db per = [ book | (per, book, _) <- db ]
+
+{- does not do what we want: it might look like the second use
+   of the same variable name per would force them to be equal, but
+   in fact this will just introduce a new variable with a the same
+   name, "shadowing" the previous variable. (The same thing happens
+   if one e.g. defines a function Int -> Int -> Int by a lambda
+   abstraction: writing -}
+
+foo :: Int -> Int -> Int
+foo  = \ x -> \ x -> x
+
+{- will not force both arguments to be equal, but the second x will
+   silently take precedence over the first, as you can see if you
+   for example try to evaluate f 1 2. if you start GHCi with the
+   commandline option fwarn-name-shadowing (e.g.
+   "ghci -fwarn-name-shadowing lectures/Lec06.hs"), GHC will warn
+   you when this happens:
+
+      GHCi, version 8.0.2: http://www.haskell.org/ghc/  :? for help
+      [1 of 1] Compiling Lec06            ( lectures/Lec06.hs, interpreted )
+
+      lectures/Lec06.hs:352:31: warning: [-Wname-shadowing]
+          This binding for ‘per’ shadows the existing binding
+           bound at lectures/Lec06.hs:352:15
+
+      lectures/Lec06.hs:362:17: warning: [-Wname-shadowing]
+          This binding for ‘x’ shadows the existing binding
+            bound at lectures/Lec06.hs:362:10
+      Ok, modules loaded: Lec06.
+      *Lec06>
+
+   End of digression. -}
+
+{- This query finds all late books, and their borrowers: -}
+
+lateBooks :: Database -> [(Book,Person)]
+lateBooks db = [ (book,per) | (per, book, fee) <- db, fee > 0 ]
+
+
+{-     PART 2.5: JOINING FILES IN A HACKY WAY
+
+   We can use list comprehensions to join two files in a
+   quick-and-dirty way in GHCi. In real life, we do this
+   to e.g. combine a register file containing your user names
+   and email addresses, and another file containing your user
+   names and exercise marks, but in order to avoid the Data
+   Protection Act, let's look at an example using public open
+   data on births and deaths in Glasgow in 2012 (obviously).
+   You can download this and many more data files from
+
+      https://data.glasgow.gov.uk/
+
+   The files in question can be found in the git repository
+   in the lectures/Lec06-data subdirectory. Looking at the
+   files, we see that death.csv contains both "data zones"
+   and "intermediate geography names", whereas birth.csv
+   contains a "geography code" (matching the data zone from
+   the other file) only. As a first step, we would thus like
+   to join the files so that we can see the more human-readable
+   name also for the death statistics. In GHCi, we can do this
+   as follows:
+
+      *Lec06> readFile "Lec06-data/birth.csv"  -- read the file
+      "GeographyCode:CS-allbirths:CS-femalebirths:CS-malebirths\nS01003025:5:3:2\nS01003026:17:7:10\nS01003027:17:9:8\nS01003028:6:5:1\nS01003029:14:5:9\n[...]
+      *Lec06> lines it -- convert string into list of lines
+      ["GeographyCode:CS-allbirths:CS-femalebirths:CS-malebirths","S01003025:5:3:2","S01003026:17:7:10","S01003027:17:9:8","S01003028:6:5:1","S01003029:14:5:9",[...]]
+      *Lec06> map (splitOn ":") it -- split up each line
+      [["GeographyCode","CS-allbirths","CS-femalebirths","CS-malebirths"],["S01003025","5","3","2"],["S01003026","17","7","10"],["S01003027","17","9","8"],["S01003028","6","5","1"],["S01003029","14","5","9"],[...]]
+      *Lec06> let birth = it
+
+   At each stage, "it" refers to the result of the previous
+   computation. By doing things in stages, we don't have to
+   remember exactly what to do in what order from the very
+   beginning. However when we now do the same for the second
+   file, we have spotted the pattern:
+
+      *Lec06> readFile "Lec06-data/death.csv"
+      "Data Zone:Intermediate Geography Name:CS-alldeaths\nS01003025:Carmunnock South:13\nS01003026:Carmunnock South:13\nS01003027:Darnley East:23\nS01003028:Glenwood South:11\nS01003029:Carmunnock South:12\nS01003030:Glenwood South:6\nS01003031:Glenwood South:0\nS01003032:Glenwood South:7\nS01003033:Glenwood South:24\nS01003034:Darnley East:1\n[...]
+      *Lec06> let death = map (splitOn ":") (lines it)
+
+   We can now join the files using a list comprehension:
+
+      *Lec06> let joined = [ (name ++ " " ++ zone, b, d) | [zone, name, d] <- death, [zone', b, _, _] <- birth, zone == zone' ]
+
+   The following function can be used to print the table in more
+   readable form. Don't worry to much about the details of it for
+   now.
+-}
+
+{-printTable :: [(String,String,String)] -> IO ()
+printTable  = mapM_ (\ (n,b,d) -> putStrLn $ n ++ ":" ++
+                                  (replicate (51 - length n) ' ') ++
+                                  b ++ "    \t" ++ d) . sort
+-}
+{-
+
+      *Lec06> printTable joined
+      "Calton, Galllowgate and Bridgeton" S01003248:      22    13
+      "Calton, Galllowgate and Bridgeton" S01003270:      14    8
+      "Calton, Galllowgate and Bridgeton" S01003271:      20    11
+      "Calton, Galllowgate and Bridgeton" S01003328:      7     3
+      "Calton, Galllowgate and Bridgeton" S01003331:      10    11
+      "Calton, Galllowgate and Bridgeton" S01003333:      9     18
+      "Calton, Galllowgate and Bridgeton" S01003335:      6     5
+      "Cranhill, Lightburn and Queenslie Sout" S01003372: 9     20
+      "Cranhill, Lightburn and Queenslie Sout" S01003377: 8     9
+      "Cranhill, Lightburn and Queenslie Sout" S01003383: 6     16
+      "Cranhill, Lightburn and Queenslie Sout" S01003401: 14    5
+      "Cranhill, Lightburn and Queenslie Sout" S01003404: 5     10
+      "Cranhill, Lightburn and Queenslie Sout" S01003413: 8     6
+      "Cranhill, Lightburn and Queenslie Sout" S01003421: 11    10
+      "Cranhill, Lightburn and Queenslie Sout" S01003428: 25    7
+      "Garthamlock, Auchinlea and Gartloch" S01003444:    10    9
+      "Garthamlock, Auchinlea and Gartloch" S01003462:    10    6
+      "Garthamlock, Auchinlea and Gartloch" S01003476:    29    2
+      "Garthamlock, Auchinlea and Gartloch" S01003502:    52    1
+      "Garthamlock, Auchinlea and Gartloch" S01003528:    7     1
+      "Roystonhill, Blochairn, and Provanmill" S01003442: 20    11
+      "Roystonhill, Blochairn, and Provanmill" S01003443: 15    6
+      "Roystonhill, Blochairn, and Provanmill" S01003445: 21    6
+      "Roystonhill, Blochairn, and Provanmill" S01003457: 29    12
+      "Roystonhill, Blochairn, and Provanmill" S01003458: 18    10
+      "Roystonhill, Blochairn, and Provanmill" S01003488: 9     25
+      Anderston S01003382:                                25    13
+      Anderston S01003408:                                8     9
+      Anderston S01003423:                                8     2
+      Anderston S01003430:                                8     1
+      Anniesland East S01003612:                          7     25
+      Anniesland East S01003632:                          9     2
+      Anniesland East S01003635:                          1     8
+      Anniesland East S01003661:                          16    4
+      Anniesland East S01003675:                          8     4
+      [...]
+
+   We can run further queries, for instance we can see in how
+   many areas the population decreased, increased or stayed
+   the same in 2012:
+
+      *Lec06> length [ (name ++ " " ++ zone, b, d) | [zone, name, d] <- death, [zone', b, _, _] <- birth, zone == zone', (read b :: Int) < read d ]
+      265
+      *Lec06> length [ (name ++ " " ++ zone, b, d) | [zone, name, d] <- death, [zone', b, _, _] <- birth, zone == zone', (read b :: Int) > read d ]
+      385
+      *Lec06> length [ (name ++ " " ++ zone, b, d) | [zone, name, d] <- death, [zone', b, _, _] <- birth, zone == zone', (read b :: Int) == read d ]
+      44
+
+   (Here we are using the function read from the Read type class
+   to convert a string into an Int.) -}

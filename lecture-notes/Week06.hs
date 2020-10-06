@@ -65,7 +65,7 @@ import Prelude hiding (return)
    effect of "possibly throwing an exception". -}
 
 
-{-    PART 1 : SIMULATING EXCEPTIONS
+{-    Part 6.1 : SIMULATING EXCEPTIONS
 
    We've seen the 'Maybe' type several times so far in this course, as
    a way of making it explicit when a function can possibly fail to
@@ -315,7 +315,7 @@ lookupAll_v4 kvs (Node l k r) =
 
 
 
-{-    PART 2 : CATCHING EXCEPTIONS
+{-    Part 6.2 : CATCHING EXCEPTIONS
 
    The 'ifOK' function captures one aspect of programming with
    exceptions: that if we execute two possibly failing programs in
@@ -411,7 +411,7 @@ data Either a b
      String', with a useful error message when the key is not found. -}
 
 
-{-    PART 3 : SIMULATING MUTABLE STATE
+{-    Part 6.3 : SIMULATING MUTABLE STATE
 
    In the last lecture, we saw how to simulate exceptions in Haskell
    by using the 'Maybe' type. However, writing out programs that use
@@ -687,7 +687,7 @@ runState :: State a -> Int -> (Int,a)
 runState t i = t i
 
 
-{-    PART 4 : SIMULATING OUTPUT
+{-    Part 6.4 : SIMULATING OUTPUT
 
    Another side effect often used in programs is printing: outputting
    stuff to the screen. Let's see how to simulate this in Haskell, and
@@ -801,7 +801,7 @@ printAndSum_v2 (Node l x r) =
 
 
 
-{-    PART 5 : WHAT'S THE COMMON PATTERN?
+{-    Part 6.5 : WHAT'S THE COMMON PATTERN?
 
    We've now seen three examples of simulations of side effects:
    exceptions, mutable state, and printing. In the case of exceptions,

@@ -24,6 +24,6 @@ module Week05 where
 
 -- Lec09
 
-{-    PART 6 : MORE FUNCTOR INSTANCES -}
+{-    PART 6 : FUNCTOR AND FOLDABLE TOGETHER -}
 
 -- Lec09
