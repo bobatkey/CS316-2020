@@ -858,7 +858,7 @@ data ValueResult
   = Ok String
   | KeyMissing
   | KeyNotAValue
-  deriving Show
+  deriving (Show, Eq)
 
 {- Implement 'getValue', which uses 'getKey' and returns 'Ok s' if the
    key is associated with 'Value s', 'KeyMissing' if the key is not
@@ -922,10 +922,10 @@ mergeKVs = undefined
 
    Examples:
 
-      getKey ["a","b"] (update ["a","b"] "x" emptyConfig)            == Just "x"
+      getKey ["a","b"] (update ["a","b"] "x" emptyConfig)            == Just (Value "x")
       getKey ["a","b"] (update ["a","c"] "x" emptyConfig)            == Nothing
-      getKey ["a"] (update ["a"] "y" (update ["a"] "x" emptyConfig)) == Just "y"
-      getKey ["a"] (update [] "x" (update ["a"] "y" emptyConfig))    == Nothing
+      getKey ["a"] (update ["a"] "y" (update ["a"] "x" emptyConfig)) == Just (Value "y")
+      getKey ["a"] (update [] "x" (update ["a"] "y" emptyConfig))    == Just (Value "y")
 
    You should use 'set' and 'merge' to write 'update'. Doing it any
    other way will be a lot more work. -}
