@@ -19,6 +19,13 @@ executable hello-cs316
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
 
+executable Ex1
+  hs-source-dirs:      exercises
+  main-is:             Ex1Main.hs
+  other-modules:       Ex1
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+
 library
   hs-source-dirs:      lecture-notes
   exposed-modules:     Week01,
