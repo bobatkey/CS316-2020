@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 module Week03 where
 
-import Prelude hiding ((.), map, filter, id)
+import Prelude hiding ((.), map, filter, id, flip)
 
 {-    WEEK 3 : HIGHER ORDER FUNCTIONS
 
@@ -616,7 +616,7 @@ dupAll = undefined
 
 {- 6. Using 'filter'
 
-   (a) Use 'filter' to return a list of consisting of only the 'E's in
+   (a) Use 'filter' to return a list consisting of only the 'E's in
        a 'String'.
 
    (b) Use 'onlyEs' and 'length' to count the number of 'E's in a string.
@@ -736,7 +736,7 @@ subst = undefined
    and it is useful for chaining calls left-to-right instead of
    right-to-left as is usual in Haskell:
 
-       "EIEIO" |> filter onlyEs |> length
+       "EIEIO" |> onlyEs |> length
 -}
 
 {- 12. Flipping
