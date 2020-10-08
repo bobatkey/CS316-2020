@@ -439,52 +439,144 @@ id :: a -> a
 id x = x
 
 
-{-     Part 3.5 : MAP FOR OTHER DATATYPES -}
+{-     Part 3.5 : MAP FOR OTHER DATATYPES
 
-{- FIXME: to be completed. See Video 3.5 for now. -}
+   We can think of 'map' for lists as taking an input list full of
+   values, applying some function to every value, and the returning a
+   list *of the same shape* with the transformed values
+   in. Graphically, we have:
 
-{- map for Trees -}
+          [ a1, a2, ..., an ]
+            |   |        |
+            v   v        v
+          [ b1, b2, ..., bn ]
+
+   where b1 = f a1, b2 = f a2, ..., bn = f an.
+
+   We can apply the same idea to other kinds of data types that act
+   like containers. For instance, if we define 'Tree's like so: -}
 
 data Tree a
   = Leaf
   | Node (Tree a) a (Tree a)
   deriving Show
 
+{- Then we can draw the same idea of transforming values and maintaining
+   shape:
+
+      Node (Node Leaf a1 Leaf) a2 (Node Leaf a3 Leaf)
+                      |        |             |
+                      v        v             v
+      Node (Node Leaf b1 Leaf) b2 (Node Leaf b3 Leaf)
+
+   where, again, b1 == f a1, and so on.
+
+   So, 'map' for 'Tree's seems to make sense. Let's try to write it as
+   a function: -}
+
 mapTree :: (a -> b) -> Tree a -> Tree b
 mapTree f Leaf         = Leaf
 mapTree f (Node l x r) = Node (mapTree f l) (f x) (mapTree f r)
 
-{- Maybe as a container -}
+{- This is structurally similar to 'map' for lists:
 
-{-
-data Maybe a
-  = Nothing
-  | Just a
-  deriving Show
+    1. The empty tree ('Leaf') gets sent to the empty tree
+
+    2. 'Node's are translated to 'Node's, with their contained values
+       transformed.
+
+  Giving it a go, we can see that it takes trees to trees,
+  transforming all the contained values:
+
+     *Week03> mapTree (\x -> x + 1) (Node (Node Leaf 3 Leaf) 0 (Node Leaf 7 Leaf))
+     Node (Node Leaf 4 Leaf) 1 (Node Leaf 8 Leaf)
 -}
+
+{- We can also apply the same idea to 'Maybe's. We can think of 'Maybe'
+   as a container that contains either zero or one element. So
+   'mapMaybe' should map 'Nothing' to 'Nothing' (the empty container),
+   and 'Just x' to 'Just (f x)': -}
 
 mapMaybe :: (a -> b) -> Maybe a -> Maybe b
 mapMaybe f Nothing  = Nothing
 mapMaybe f (Just a) = Just (f a)
 
-{- Containers with values for every string -}
+{- The containers we've seen so far have been made from constructors. We
+   can also use first class functions to make containers that contain
+   infinitely many things. The following definition makes a datatype
+   of values that contain an 'a' for every possible 'String': -}
 
 data WithString a
   = MkWithString (String -> a)
 
+{- For instance, we can make a 'WithString Int' that, for every string,
+   contains its length: -}
+
 lengths :: WithString Int
 lengths = MkWithString (\s -> length s)
+
+{- And we can look up the value associated with a certain string by
+   using the following function: -}
 
 valueOf :: String -> WithString a -> a
 valueOf s (MkWithString f) = f s
 
+{- So:
+
+     *Week03> valueOf "hello" lengths
+     5
+     *Week03> valueOf "hi" lengths
+     2
+
+   Because it is a container, 'WithString' also has a 'map'
+   function. If we have a container of 'a's for every 'String', and a
+   function 'f :: a -> b', then we can get a container of 'b's for
+   every 'String', by using 'f' to transform the values returned by
+   the first container: -}
 
 mapWithString :: (a -> b) -> WithString a -> WithString b
 mapWithString f (MkWithString h) = MkWithString (\s -> f (h s))
 
-{- A non-example -}
+{- Now we can transform the 'lengths' container to one that contains
+   'True' for all strings of length greater than 4 and 'False' for
+   those where it is less than 4:
+
+      *Week03> valueOf "hello" (mapWithString (\x -> x > 4) lengths)
+      True
+      *Week03> valueOf "hi" (mapWithString (\x -> x > 4) lengths)
+      False
+-}
+
+{- It may seem from the examples above that any parameterised datatype
+   acts like a container, and has a 'map'-like function. Here is an
+   example where this is not the case.
+
+   If we define a datatype of functions from a type to itself, like
+   so: -}
 
 data Fun a = MkFun (a -> a)
+
+{- This type is useful as a way of capturing the idea of transformers
+   that return values of the same type as they accept. We will see it
+   return when we talk about Monoids in Week 05.
+
+   But can we write a 'map' for this type?
+
+   If we start with:
+
+     mapFun :: (a -> b) -> Fun a -> Fun b
+     mapFun f (MkFun h) = MkFun ????
+
+   then the '???' requires us to write something of type 'b ->
+   b'. However, what we have are:
+
+     - f :: a -> b
+     - h :: a -> a
+
+   Neither of these takes a 'b' as input, so there is no way to use
+   them to write a function of type 'b -> b'. In fact, pretty much the
+   only function of type 'b -> b' we can use is the identity function
+   (ignoring the function that never terminates): -}
 
 mapFun :: (a -> b) -> Fun a -> Fun b
 mapFun f (MkFun h) = MkFun id
@@ -523,7 +615,11 @@ mapFun f (MkFun h) = MkFun id
 
       fmap id (MkFun g) = MkFun id
 
-   but, to satisfy the first law, the result ought to be 'MkFun g'. -}
+   but, to satisfy the first law, the result ought to be 'MkFun g'.
+
+   Going back, it is possible to check that the other 'map' functions
+   we wrote above all satisfy the two laws above, so they are "proper"
+   'map' functions. -}
 
 
 {------------------------------------------------------------------------------}
