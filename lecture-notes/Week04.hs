@@ -69,7 +69,7 @@ append' xs ys = appendHelper xs
    (return 'ys'), and there is a thing to do in the 'x:xs' case
    that is defined in terms of the result of processing 'xs'.
 
-   Now we take the idea from Lecture 05 replacing the specific parts
+   Now we take the idea from Week 03 replacing the specific parts
    of these functions with parameters, to make a generic version of
    all these functions that can be specialised to each one of them.
 
@@ -127,7 +127,7 @@ append'' xs ys = foldr (:) ys xs
    foldr. We won't prove this here, but we can write some functions on
    lists we've seen already using 'foldr'.
 
-   First up, let's rewrite the 'map' function from Lecture 05 using
+   First up, let's rewrite the 'map' function from Week 03 using
    'foldr'. The original 'map' looks like: -}
 
 mapO :: (a -> b) -> [a] -> [b]
@@ -295,7 +295,7 @@ data Tree a
    do for '(:)', 'foldTree' takes as arguments what to do for 'Leaf'
    and what to do for 'Node'. The major difference is that the
    operation for 'Node' now takes three arguments (because 'Node'
-   takes tree arguments):
+   takes three arguments):
 
       1. The _result_ of processing the left subtree
       2. The data value stored at this node
@@ -399,8 +399,7 @@ ex2 = [2,4..120]
 
    Here we had to press Ctrl-C to stop printing out the list
    forever. Computing with such infinite data is possible because
-   of /lazy evaluation/, which we will learn more about in Lecture
-   17.
+   of /lazy evaluation/, which we will learn more about in Week 10.
 
    Finally, we come to the comprehensions that the lecture title refers
    to. In mathematics, we can also form sets by describing the properties
@@ -490,7 +489,7 @@ concat xss = [ x | xs <- xss, x <- xs]
    element x in the list xs, we put x in the output. -}
 
 {- Just like on the left hand side of equations defining functions
-   by pattern matching, if a a variable is not used, we do not need
+   by pattern matching, if a variable is not used, we do not need
    to name it, but can simply write an underscore _ to signal that we
    do not care about its value: -}
 
@@ -512,7 +511,7 @@ firsts' ps = [ fst xy | xy <- ps ]
    output list by introducing a /guard/, i.e. a Boolean expression
    that has to evaluate to True for the element to be included. The
    following definition keeps only those integers x that divide n
-   exactly -- in other words, the prime factors of n: -}
+   exactly -- in other words, the factors of n: -}
 
 factors :: Int -> [Int]
 factors n = [ x | x <- [1..n], n `mod` x == 0 ]
@@ -521,14 +520,13 @@ factors n = [ x | x <- [1..n], n `mod` x == 0 ]
    an integer is prime if it is only divisible by 1 and itself: -}
 
 prime :: Int -> Bool
-prime 1 = False
 prime n = factors n == [1,n]
 
-{- (We have to treat 1 separately, because 1 should be considered
-   a prime, but factors 1 == [1] /= [1,1]. Here one can see that
-   one sometimes has to be careful when more or less thinking of
-   lists as representations of sets -- because for sets, of course
-   {1} == {1,1}.)
+{- (It is worth paying extra attention to the case of 1. Namely, prime 1
+   returns False, which is correct, because factors 1 == [1] /= [1,1].
+   Here one can see that one sometimes has to be careful when more
+   or less thinking of lists as representations of sets -- because for
+   sets, of course {1} == {1,1}.)
 
    It is now straightforward to use another guard to define an
    infinite list containing exactly all the prime numbers
@@ -560,7 +558,7 @@ type Person = String
 type Book = String
 type Fee  = Integer
 
-{- We model a library database, keeping track of who has,
+{- We model a library database, keeping track of who has
    borrowed which book, and how much they owe in late fees.
    A database is again just a table of tuples of data. -}
 
@@ -597,7 +595,7 @@ booksWrong db per = [ book | (per, book, _) <- db ]
 
 {- does not do what we want: it might look like the second use
    of the same variable name per would force them to be equal, but
-   in fact this will just introduce a new variable with a the same
+   in fact this will just introduce a new variable with the same
    name, "shadowing" the previous variable. (The same thing happens
    if one e.g. defines a function Int -> Int -> Int by a lambda
    abstraction: writing -}
@@ -607,7 +605,7 @@ foo  = \ x -> \ x -> x
 
 {- will not force both arguments to be equal, but the second x will
    silently take precedence over the first, as you can see if you for
-   example try to evaluate f 1 2. if you start GHCi with the
+   example try to evaluate foo 1 2. if you start GHCi with the
    commandline option fwarn-name-shadowing (e.g.  "stack ghci
    --ghc-options -fwarn-name-shadowing lecture-notess/Week04.hs"), GHC
    will warn you when this happens:
@@ -645,7 +643,7 @@ lateBooks db = [ (book,per) | (per, book, fee) <- db, fee > 0 ]
    whereas birth.csv contains a "geography code" (matching the data
    zone from the other file) only. As a first step, we would thus like
    to join the files so that we can see the more human-readable name
-   also for the death statistics. In GHCi, we can do this as follows:
+   also for the birth statistics. In GHCi, we can do this as follows:
 
       *Week04> readFile "data/birth.csv"  -- read the file
       "GeographyCode:CS-allbirths:CS-femalebirths:CS-malebirths\nS01003025:5:3:2\nS01003026:17:7:10\nS01003027:17:9:8\nS01003028:6:5:1\nS01003029:14:5:9\n[...]

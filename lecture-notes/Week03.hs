@@ -2,6 +2,7 @@
 module Week03 where
 
 import Prelude hiding ((.), map, filter, id, flip)
+import Data.Char
 
 {-    WEEK 3 : HIGHER ORDER FUNCTIONS
 
