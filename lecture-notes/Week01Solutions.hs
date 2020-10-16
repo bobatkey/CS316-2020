@@ -924,6 +924,7 @@ pairOfEqualDirections (MkPair Up    Up)    = True
 pairOfEqualDirections (MkPair Down  Down)  = True
 pairOfEqualDirections (MkPair Left  Left)  = True
 pairOfEqualDirections (MkPair Right Right) = True
+pairOfEqualDirections (MkPair _     _)     = False
 
 {- 4. Define a datatype 'Triple a b c' for values that have three
       components. Write functions 'get1of3 :: Triple a b c -> a',

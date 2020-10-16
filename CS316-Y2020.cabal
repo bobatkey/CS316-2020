@@ -38,8 +38,11 @@ executable Ex2
 library
   hs-source-dirs:      lecture-notes
   exposed-modules:     Week01,
+                       Week01Solutions,
                        Week02,
+                       Week02Solutions,
                        Week03,
+                       Week03Solutions,
                        Week04,
                        Week05,
                        Week06,

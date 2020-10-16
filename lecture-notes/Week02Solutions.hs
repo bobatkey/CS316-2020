@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
-module Week02 where
+module Week02Solutions where
 
 {- CS316 2020/21 : Week 2
 
