@@ -815,7 +815,7 @@ over = undefined
    transparent. We can then set a background by putting the resulting
    picture 'over' a background.
 
-   Define the 'cut' function, using 'liftBitmap': -}
+   Define the 'cut' function, using 'mapPicture2': -}
 
 cut :: Monoid a => Picture Bool -> Picture a -> Picture a
 cut = undefined
