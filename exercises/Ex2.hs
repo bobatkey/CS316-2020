@@ -925,7 +925,7 @@ picture =
    'face.bmp' file to look at. -}
 
 {----------------------------------------------------------------------}
-{- PART 3 : PROCESSES                                                 -}
+{- PART 4 : PROCESSES                                                 -}
 {----------------------------------------------------------------------}
 
 {- This part of the exercise generalises the communicating processes
