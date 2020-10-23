@@ -21,7 +21,7 @@ import System.IO               (openFile, IOMode (..), hClose)
 
    Submission instructions:
 
-    - Deadline: 23:00 Thursday 29th October
+    - Deadline: 23:00 Thursday 5th November
     - Location: CS316 MyPlace
 
    This exercise is worth 30% of your overall mark for CS316. It is
