@@ -1130,6 +1130,10 @@ exists p = unAny . fold . fmap (MkAny . p)
 
 data Host = MkHost String Int
 
+-- answer:
+instance Show Host where
+   show (MkHost name port) = "{\"name\":\"" ++ name ++ "\", \"port\": " ++ show port ++ "}"
+
 
 {- 2. Define an 'Eq' instance for the following datatype that makes two
       numbers equal if they have the same remainder after division by
@@ -1138,11 +1142,22 @@ data Host = MkHost String Int
 
 data ClockHour = MkClockHour Int
 
+-- answer:
+instance Eq ClockHour where
+   MkClockHour hour1 == MkClockHour hour2 = (hour1 `mod` 12) == (hour2 `mod` 12)
+
 {- 3. Define Semigroup and Monoid instances for the following datatype
       that take the 'max' of the first element and 'min' of the
       second, and where 'mempty' is the pair with '0', and '1'. -}
 
 data ForAndAgainst = Evidence Double Double
+
+instance Monoid ForAndAgainst where
+   mempty = Evidence 0 1
+
+instance Semigroup ForAndAgainst where
+   Evidence for1 against1 <> Evidence for2 against2 =
+      Evidence (max for1 for2) (min against1 against2)
 
 {-    (Such a datatype might be used for aggregating degrees of evidence
        for and against something. The first 'Double' is the strength
@@ -1157,14 +1172,29 @@ data OneTwoOrThree a
   | Three a a a
   deriving Show
 
+-- The foldable instance for this type has to "add up" one, two, or
+-- three things depending on which constructor is used:
+
 instance Foldable OneTwoOrThree where
-  fold = undefined
+  fold (One x)       = x
+  fold (Two x y)     = x <> y
+  fold (Three x y z) = x <> y <> z
+
+-- The order that we add things up is up to us to pick (remember that
+-- it is not always the case that 'x <> y == y <> x'), but
+-- left-to-right seems like a good default.
 
 {- 5. If you have a
 
           foldMap :: Monoid b => (a -> b) -> C a -> b
 
       for some container type C, can you always define a 'fold'? -}
+
+-- Yes, because we can put in the 'id' (identity) function (also
+-- written as '\x -> x'), to do nothing to the elements of the
+-- container before folding them down to a single value:
+
+-- fold = foldMap id
 
 
 {- 6. Define a function of the type:
@@ -1175,17 +1205,68 @@ instance Foldable OneTwoOrThree where
       'toList' function. If you only have a 'toList' function for a
       container can you always define 'fold'? -}
 
+-- To do this, we take the following strategy. Our input is a
+-- container full of 'a's. For example, a list full of 'Int's:
+
+---   [ 1,   2,   3,   4  ]
+
+-- For each value in the container, we transform it to a list
+-- containing only that value:
+
+---   [[1], [2], [3], [4] ]
+
+-- Then we do a 'fold' to concatenate all these lists to get a final
+-- result list:
+
+---   [ 1,   2,   3,   4  ]
+
+-- This seems a like a silly way to convert lists to themselves, but
+-- once we have it working for any container that is a Functor and a
+-- Foldable, then the same function will work. For example, the same
+-- idea works for Trees:
+
+---    Node (Node Leaf  4  Leaf)  5  (Node Leaf  7  Leaf)
+---    Node (Node Leaf [4] Leaf) [5] (Node Leaf [7] Leaf)
+--     [                4   ,     5     ,        7   ]
+
+-- To accomplish the full solution, we start with the container 'c',
+-- run fmap with the anonymous function '\x -> [x]' to convert every
+-- element to a one-element list, and then use 'fold' to concatenate
+-- all the lists:
+
 toList :: (Functor c, Foldable c) => c a -> [a]
-toList = undefined
+toList c = fold (fmap (\x -> [x]) c)
 
 {- 7. Define a Functor instance for the OneTwoOrThree type above: -}
 
+-- The Functor instance for 'OneTwoOrThree' follows the general idea
+-- of all 'map'-like functions: we preserve the shape (the
+-- constructors used), but alter the stored values using the function
+-- 'f'.
+
 instance Functor OneTwoOrThree where
-   fmap = undefined
+   fmap f (One x)       = One (f x)
+   fmap f (Two x y)     = Two (f x) (f y)
+   fmap f (Three x y z) = Three (f x) (f y) (f z)
 
 
 {- 8. Use 'newtype' to define a generic 'product' function that computes
       the product (i.e. multiplies) all the numbers in a container: -}
 
+-- We follow the same strategy as the 'Any' type above to take the
+-- 'Or' of a container full of Bools, and use a newtype:
+
+newtype MulInt = MkMulInt Int
+  deriving Show
+
+instance Semigroup MulInt where
+   MkMulInt x <> MkMulInt y = MkMulInt (x * y)
+
+instance Monoid MulInt where
+   mempty = MkMulInt 1
+
+unMulInt :: MulInt -> Int
+unMulInt (MkMulInt x) = x
+
 productGeneric :: (Functor c, Foldable c) => c Int -> Int
-productGeneric = undefined
+productGeneric c = (\(MkMulInt x) -> x) (fold (fmap MkMulInt c))
