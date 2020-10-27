@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 module Week06 where
 
-import Prelude hiding (return)
+import Prelude hiding (return, Either (..))
 
 {-    WEEK 6 : SIMULATING SIDE EFFECTS
 
