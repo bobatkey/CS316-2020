@@ -413,8 +413,8 @@ data Either a b
 
 {-    Part 6.3 : SIMULATING MUTABLE STATE
 
-   In the last lecture, we saw how to simulate exceptions in Haskell
-   by using the 'Maybe' type. However, writing out programs that use
+   In the last part, we saw how to simulate exceptions in Haskell by
+   using the 'Maybe' type. However, writing out programs that use
    exceptions in this way was tedious due to the constant use of
    'case' to describe how exceptions behave.
 
