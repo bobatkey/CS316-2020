@@ -31,12 +31,12 @@ ifThenElse False x y = y
    and give it a name: 'Monad'. -}
 
 
-{-    Part 7.11 : DEFINING MONADS
+{-    Part 7.1 : DEFINING MONADS and THE MAYBE MONAD
 
    In each of the three cases, we saw that there is common
    structure. Each one had a "do nothing" operation:
 
-       return         :: a -> Maybe a
+       returnOk       :: a -> Maybe a
        returnState    :: a -> State a
        returnPrinting :: a -> Printing a
 
@@ -51,9 +51,9 @@ ifThenElse False x y = y
 
        sequ                :: Process a ->  (a -> Process b)  -> Process b
 
-   If it was one, it wouldn't be interesting. Two or three is maybe a
-   coincidence. But four examples is calling out for this common
-   pattern to be given a name.
+   If there was only one example, it wouldn't be interesting. Two or
+   three is maybe a coincidence. But four examples is calling out for
+   this common pattern to be given a name.
 
    For historical reasons, that name is "Monad", which is not the best
    name that could have been used. However, it is the name that has
@@ -78,7 +78,7 @@ ifThenElse False x y = y
    in the continuation.
 
    In Haskell, we can use type classes to give a name to all type
-   constructors 'm' that have a 'return' and a '(>>=)': -}
+   constructors 'm' that have a 'returnOk' and a '(>>=)': -}
 
 class Monad m where
   return :: a -> m a
@@ -92,19 +92,17 @@ class Monad m where
    examples we have seen so far will have gone some way to justifying
    the cost of introducing a new type class.
 
-   Let's now see how to make the examples from the previous two
-   lectures into instances of the 'Monad' type class. Each of these
-   will also have several extra operations beyond the 'return' and
-   '>>=' that are peculiar to that instance.
+   Let's now see how to make the examples from last week into
+   instances of the 'Monad' type class. Each of these will also have
+   several extra operations beyond the 'return' and '>>=' that are
+   peculiar to that instance.
 
    We'll also see that Haskell treats the 'Monad' type class a little
    bit specially, in that Haskell has special syntax for writing
    programs that use '>>=' ("bind"), called "'do' notation". -}
 
 
-{-    Part 7.2 : MAYBE MONAD
-
-   In Lecture 10, we saw definitions of 'return' and 'ifOK' for
+{- In Week 06, we saw definitions of 'returnOk' and 'ifOK' for
    'Maybe'. Let's now put them in an instance for the 'Monad' type
    class, declaring 'Maybe' to be a 'Monad' by implementing the two
    required functions: -}
@@ -132,22 +130,20 @@ catch op handler =
     Nothing -> handler
     Just x  -> Just x
 
--- FIXME: do an example.
 
+{-    Part 7.2 : 'do' NOTATION
 
-{-    Part 7.3 : 'do' NOTATION
+   Last week, we saw that using functions like 'ifOK', 'andThen' and
+   'andThenWithPrinting', we can significantly tidy up functions that
+   perform side effects. However, they are still a little bit messy
+   due to the repeated use of the helper functions. Now that we've
+   defined the 'Monad' type class, we do at least have the option of
+   using the same function name ('>>=') every time. However, Haskell
+   also provides a handy notation for making functions that use Monads
+   look nicer.
 
-   In the previous two lectures, we've seen that using functions like
-   'ifOK', 'andThen' and 'andThenWithPrinting', we can significantly
-   tidy up functions that perform side effects. However, they are
-   still a little bit messy due to the repeated use of the helper
-   functions. Now that we've defined the 'Monad' type class, we do at
-   least have the option of using the same function name ('>>=') every
-   time. However, Haskell also provides a handy notation for making
-   functions that use Monads look nicer.
-
-   Let's look at the 'lookupAll' function from Lecture 10
-   again. Here's the 'Tree' datatype again: -}
+   Let's look at the 'lookupAll' function from Week 06 and see how
+   'do' makes things a little simpler. Here's the 'Tree' datatype: -}
 
 data Tree a
   = Leaf
@@ -185,7 +181,7 @@ lookupAll_v2 kvs (Node l k r) =
      return (Node l' v r')
 
 {- Which hides all the uses of '>>=' and the lambdas, and starts to look
-   like a normal sequence of instructions, executed one after the
+   like a normal sequence of instructions to be executed one after the
    other.
 
    How does 'do' notation work? It translates each line as follows:
@@ -206,12 +202,10 @@ lookupAll_v2 kvs (Node l k r) =
 
 -}
 
--- FIXME: bigger example, some pitfalls
 
+{-    Part 7.3 : STATE MONAD
 
-{-    Part 7.4 : STATE AND PRINTING MONAD
-
-   In Week 6, we defined a type synonym for "state mutating operation
+   In Week 06, we defined a type synonym for "state mutating operation
    that returns a value of type 'a'":
 
        type State a = Int -> (Int, a)
@@ -229,8 +223,8 @@ runState :: State a -> Int -> (Int, a)
 runState (MkState t) = t
 
 {- Now we can define the 'Monad' instance for 'State', using the same
-   definitions as in Lecture 11, except with extra uses of 'MkState'
-   and 'runState' to move between the 'State' type and the underlying
+   definitions as in Week 06, except with extra uses of 'MkState' and
+   'runState' to move between the 'State' type and the underlying
    representation: -}
 
 instance Monad State where
@@ -256,8 +250,8 @@ put i = MkState (\_ -> (i,()))
 
 {- Because we have defined a 'Monad' instance for 'State', we
    automatically get to use 'do' notation. For example, here is the
-   'getAndIncrement' state mutation operation from Lecture 11, written
-   in as a sequence of steps: -}
+   'getAndIncrement' state mutation operation from Week 06, written in
+   as a sequence of steps: -}
 
 getAndIncrement :: State Int
 getAndIncrement =
@@ -265,9 +259,24 @@ getAndIncrement =
      put (x+1)
      return x
 
+{- Now we can write 'numberTree' using 'do' notation, which makes the
+   whole implementation easier to read: -}
+
+numberTree :: Tree a -> State (Tree (a, Int))
+numberTree Leaf =
+  return Leaf
+numberTree (Node l x r) =
+  do l' <- numberTree l
+     i  <- getAndIncrement
+     r' <- numberTree r
+     return (Node l' (x, i) r')
+
+
+{-    Part 7.4 PRINTING MONAD -}
+
 {- Just as we made 'State' an instance of 'Monad', we can do the same
-   for 'Printing'. In the last lecture, we defined 'Printing' as a
-   type synonym:
+   for 'Printing'. In the Week 06, we defined 'Printing' as a type
+   synonym:
 
       type Printing a = ([String]), a)
 
@@ -279,7 +288,7 @@ getAndIncrement =
 data Printing a = MkPrinting [String] a
   deriving Show
 
-{- The definitions of 'return' and '>>=' are the same as in Lecture 11,
+{- The definitions of 'return' and '>>=' are the same as in Week 06,
    except with the uses of 'MkPrinting' instead of the pair type '( ,
    )': -}
 
@@ -294,7 +303,7 @@ instance Monad Printing where
     in MkPrinting (o1 ++ o2) b
 
 {- The primitive operation for 'Printing' is 'printLine', as we wrote in
-    Lecture 11: -}
+   Week 06: -}
 
 printLine :: String -> Printing ()
 printLine s = MkPrinting [s] ()
@@ -309,21 +318,32 @@ add x y =
   do printLine ("Adding " ++ show x ++ " and " ++ show y)
      return (x+y)
 
+{- We can also rewrite the 'printAndSum' function from Week 06: -}
 
-{-    Part 6.5 : FUNCTIONS FOR ALL MONADS
+printAndSum :: Tree Int -> Printing Int
+printAndSum Leaf =
+  return 0
+printAndSum (Node l x r) =
+  do lsum <- printAndSum l
+     printLine (show x)
+     rsum <- printAndSum r
+     return (lsum + x + rsum)
+
+
+{-    Part 7.5 : FUNCTIONS FOR ALL MONADS
 
    We've already seen one benefit of declaring the 'Monad' type class:
    we can use 'do' notation to simplify programs that are best written
    as a sequence of steps.
 
-   Another advantage that we'll come back to in the next few lectures
-   is the ability to define Monads that don't have analogues in most
+   Another advantage that we'll come back to in the next few weeks is
+   the ability to define Monads that don't have analogues in most
    languages. For instance, we can define a Monad of "multi-valued
    functions", which is useful for defining search functions, and a
    Monad of "parsers".
 
    A third advantage is the ability to write functions that work for
-   all monads, no just 'Maybe', 'State', 'Printing', etc. This allows
+   all monads, not just 'Maybe', 'State', 'Printing', etc. This allows
    us to capture common patterns, such as mapping a function over a
    list, while doing some side effects. This function is called
    'mapM': -}
@@ -375,10 +395,11 @@ mapM_ f (x:xs) =
 {- The underscore at the end of the name is a convention for a variant
    of a function that returns '()' instead of another data structure.
 
-   'mapM_' enables us to write something like a 'foreach' loop in
-   languages with pervasive side effects. For instance, to print out
-   each element of a list using the 'Printing' monad, we use 'mapM_'
-   to iterate over the list, instead of doing the recursion ourselves: -}
+   'mapM_' enables us to write something like the 'for each' loops in
+   languages that have pervasive side effects. For instance, to print
+   out each element of a list using the 'Printing' monad, we use
+   'mapM_' to iterate over the list, instead of doing the recursion
+   ourselves: -}
 
 printList :: Show a => [a] -> Printing ()
 printList = mapM_ (\x -> printLine (show x))
@@ -399,8 +420,8 @@ printList_v2 :: Show a => [a] -> Printing ()
 printList_v2 xs =
   for_ xs (\x -> printLine (show x))
 
-{- Or printing out the numbers from 1 to 10 (using the [1..10] notation
-   from Lecture 06): -}
+{- Or printing out the numbers from 1 to 10 (using the [1..10]
+   notation): -}
 
 printNumbers :: Printing ()
 printNumbers =
@@ -415,9 +436,9 @@ printNumbers =
 lengthImp :: [a] -> State Int
 lengthImp xs =
   do put 0
-     for_ xs $ \_ -> do
+     for_ xs (\_ -> do
        len <- get
-       put (len+1)
+       put (len+1))
      result <- get
      return result
 
@@ -426,21 +447,42 @@ lengthImp xs =
 sumImp :: [Int] -> State Int
 sumImp xs =
   do put 0
-     for_ xs $ \x -> do
+     for_ xs (\x -> do
        total <- get
-       put (total + x)
+       put (total + x))
      result <- get
      return result
 
+{------------------------------------------------------------------------------}
+{- TUTORIAL QUESTIONS                                                         -}
+{------------------------------------------------------------------------------}
+
+{- 1. The 'Maybe' monad is useful for simulating exceptions. But when an
+      exception is thrown, we don't get any information on what the
+      exceptional condition was! The way to fix this is to use a type
+      that includes some information on the 'Error' case: -}
+
+data Result a
+  = Ok a
+  | Error String
+  deriving (Show)
+
+{-    Write a Monad instance for 'Result', and use it to rewrite the
+      'search' and 'lookupAll' functions. -}
 
 
-{- EXERCISE: This implementation of 'sumImp' can only sum up lists of
-   'Int's. What changes would you have to make to 'State' so that you
-   can add up lists of 'Double's? Can you make 'State' take the type
-   of the state as a parameter? -}
+
+{- 2. Write a function that "prints out" using the Printing monad all
+      the strings in a tree: -}
+
+printTree :: Tree String -> Printing ()
+printTree = undefined
 
 
-{-    Part 7.6 : APPLICATIVE FUNCTORS -}
 
--- FIXME: Lec 16 -- do it briefly and then leave the parallel job stuff to
--- additional lecture notes.
+{- 3. This implementation of 'sumImp' can only sum up lists of
+      'Int's. What changes would you have to make to 'State' so that
+      you can add up lists of 'Double's?
+
+      Can you make an alternative version of 'State' that takes the
+      type of the state as a parameter? -}
