@@ -1147,7 +1147,7 @@ chatBot = undefined
 {- 4 MARKS -}
 
 
-{- 3.4.8 Testing Equality of Processes.
+{- 2.4.6 Testing Equality of Processes.
 
    Let's say that we want to write a function that tests two processes
    for equality -- that is they do the same input and output
