@@ -486,3 +486,9 @@ printTree = undefined
 
       Can you make an alternative version of 'State' that takes the
       type of the state as a parameter? -}
+
+
+{- 4. Write a function like mapM that works on Trees instead: -}
+
+mapTreeM :: Monad m => (a -> m b) -> Tree a -> m (Tree b)
+mapTreeM = undefined
