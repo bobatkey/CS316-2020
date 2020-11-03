@@ -868,7 +868,7 @@ transform = undefined
 
 {- 1 MARK -}
 
-{- 2.3.13 Flipping Pictures
+{- 2.3.12 Flipping Pictures
 
    Write functions that flip a 'Picture'. The first function should
    flip top to bottom (and bottom to top). The second should flip left
