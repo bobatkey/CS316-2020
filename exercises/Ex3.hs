@@ -658,7 +658,7 @@ parseExpr = undefined
 
    5. Print out the filtered CSV file, or save it to a file.
 
-   A basic implementation of the above will get you 15 marks. To get
+   A basic implementation of the above will get you 10 marks. To get
    the rest, implement some other features, such as:
 
    - Selecting fields to output
