@@ -1,5 +1,6 @@
 module Main where
 
+import Data.List (intersperse)
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
 import Control.Monad (filterM)
