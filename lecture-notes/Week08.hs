@@ -458,7 +458,7 @@ readFromFile_v2 path =
               go h (c:content)
 
 
-{-    Part 8.4 : WRITING PARSERS, THE WRONG WAY
+{-    Part 8.4 : PARSER COMBINATORS
 
    Once we can read in files, we need to be able to understand
    them. Conversion of data from a string of characters to a
@@ -556,22 +556,20 @@ parseBool_v1 _       = Nothing
    input to be passed on to the next parser. -}
 
 
-{-    Part 8.5 : PARSING WITH LEFTOVERS
-
-   We upgrade our 'Parser_v1' to also return a 'String' on success
+{- We upgrade our 'Parser_v1' to also return a 'String' on success
    like so: -}
 
 newtype Parser a = MkParser (String -> Maybe (String, a))
 
-{- Now a 'Parser' of things of type 'a' is a function that takes
-   'String's as input and either returns 'Nothing', or 'Just
-   (leftover, a)', where 'leftover' is the remainder of the input that
-   wasn't parsed, and 'a' is the value understood from the beginning
-   of the input. We'll give some examples below.
+{- A 'Parser' of things of type 'a' is a function that takes 'String's
+   as input and either returns 'Nothing', or 'Just (leftover, a)',
+   where 'leftover' is the remainder of the input that wasn't parsed,
+   and 'a' is the value understood from the beginning of the
+   input. We'll give some examples below.
 
    We've also wrapped the type definition in a 'newtype' so that we
    can define some typeclass instances for it below (similarly to how
-   we needed to use 'newtype' for the 'State' monad in Lecture 12).
+   we needed to use 'newtype' for the 'State' monad in Week 07).
 
    To run a parser, we need a function that unwraps the 'newtype' and
    runs the underlying parser on an input: -}
@@ -708,7 +706,8 @@ parsePairOfBools_v2 =
 {- In words: first we parse a boolean, call it 'b1', then we parse a
    boolean, call it 'b2'. Finally, we return the pair '(b1,b2)'. -}
 
-{-    Part 8.6 : Building Parsers
+
+{-    Part 8.5 : Building Parsers
 
    The definitions of the 'Monad' functions for 'Parser' form the
    foundation of how we're going to build complicated parsers by
@@ -721,27 +720,26 @@ parsePairOfBools_v2 =
    consumes it and returns it. Otherwise it fails. Here is the
    definition: -}
 
-parseChar :: Parser Char
-parseChar =
+char :: Parser Char
+char =
   MkParser (\input -> case input of
                         c:input1 -> Just (input1, c)
                         _        -> Nothing)
 
 {- Some examples:
 
-      > runParser parseChar "hello"
+      > runParser char "hello"
       Just ("ello", 'h')
-      > runParser parseChar "ello"
+      > runParser char "ello"
       Just ("llo", 'e')
-      > runParser parseChar ""
+      > runParser char ""
       Nothing
 
-   From these examples, we can see that 'parseChar' only fails if the
-   input is empty. Otherwise, it returns the first character in the
-   input.
+   From these examples, we can see that 'char' only fails if the input
+   is empty. Otherwise, it returns the first character in the input.
 
-   It'll also be useful to have a 'Parser' that always fails (similar to
-   'failure' we defined for 'Maybe' in Lecture 10). We'll use this
+   It'll also be useful to have a 'Parser' that always fails (similar
+   to 'failure' we defined for 'Maybe' in Week 06). We'll use this
    whenever we read a piece of input that we don't want. -}
 
 failParse :: Parser a
@@ -755,25 +753,25 @@ failParse =
       > runParser failParse "hello"
       Nothing
 
-   We can put the 'Parser's 'parseChar' and 'failParse' together to
-   write a parser that only succeeds on the character 'expected' we
-   give it. It first uses 'parseChar' to read a single character
-   'got'. If 'got' and 'expected' are the same thing, then it returns
-   '()', signaling success. If they are not equal, it uses 'failParse'
-   to reject this input. -}
+   We can put the 'Parser's 'char' and 'failParse' together to write a
+   parser that only succeeds on the character 'expected' we give
+   it. It first uses 'char' to read a single character 'got'. If 'got'
+   and 'expected' are the same thing, then it returns '()', signaling
+   success. If they are not equal, it uses 'failParse' to reject this
+   input. -}
 
-parseLiteralChar :: Char -> Parser ()
-parseLiteralChar expected =
-  do got <- parseChar
+isChar :: Char -> Parser ()
+isChar expected =
+  do got <- char
      if got == expected then return () else failParse
 
 {- Some examples:
 
-      > runParser (parseLiteralChar 'h') "hello"
+      > runParser (isChar 'h') "hello"
       Just ("ello", ())
-      > runParser (parseLiteralChar 'h') "ello"
+      > runParser (isChar 'h') "ello"
       Nothing
-      > runParser (parseLiteralChar 'h') ""
+      > runParser (isChar 'h') ""
       Nothing
 
    If we can write a parser that checks for specific characters, we
@@ -783,34 +781,31 @@ parseLiteralChar expected =
    12. Using this, we get a parser that takes a specific 'String', and
    suceeds only if that string is at the start of the input: -}
 
-parseLiteral :: String -> Parser ()
-parseLiteral = mapM_ parseLiteralChar
+isString :: String -> Parser ()
+isString = mapM_ isChar
 
 {- For example:
 
-      > runParser (parseLiteral "hello") "hello"
+      > runParser (isString "hello") "hello"
       Just ("", ())
-      > runParser (parseLiteral "hullo") "hello"
+      > runParser (isString "hullo") "hello"
       Nothing
-      > runParser (parseLiteral "hello") "hello world"
+      > runParser (isString "hello") "hello world"
       Just (" world", ())
 
 
-   EXERCISE: Rewrite 'parseLiteral' using 'for_'.
-
-
-   Using 'parseLiteralChar', we can write a parser for 'Bool's without
-   having to write the underlying parser directly, but reading the
-   first character and then deciding whether to try to read a "True"
-   or a "False": -}
+   Using 'char', we can write a parser for 'Bool's without having to
+   write the underlying parser directly. We can read the first
+   character and then decide whether to try to read a "True" or a
+   "False": -}
 
 parseBool_v3 :: Parser Bool
 parseBool_v3 =
-  do c <- parseChar
+  do c <- char
      case c of
-       'T' -> do parseLiteral "rue"
+       'T' -> do isString "rue"
                  return True
-       'F' -> do parseLiteral "alse"
+       'F' -> do isString "alse"
                  return False
        _   -> failParse
 
@@ -832,12 +827,12 @@ parseBool_v3 =
    of them share the first few letters? Definitions like this would
    get quite messy.
 
-   If we think back to Lecture 10 on using 'Maybe' to model
-   exceptions, we had the function 'catch' for modelling the idea of
-   "trying one thing, and if that fails, trying another". We could use
-   something like this for writing 'Parser's: we try one parser (for
-   parsing the word "True", say), and if that doesn't work try another
-   (e.g., for parsing the word "False").
+   If we think back to Week 06 on using 'Maybe' to model exceptions,
+   we had the function 'catch' for modelling the idea of "trying one
+   thing, and if that fails, trying another". We could use something
+   like this for writing 'Parser's: we try one parser (for parsing the
+   word "True", say), and if that doesn't work try another (e.g., for
+   parsing the word "False").
 
    We'll call the function that tries one parser and then another
    'orElse'. Its definition is very similar to the one for 'catch',
@@ -847,33 +842,25 @@ orElse :: Parser a -> Parser a -> Parser a
 orElse p1 p2 =
   MkParser (\input ->
               case runParser p1 input of
-                Nothing -> runParser p2 input
+                Nothing       -> runParser p2 input
                 Just (rest,x) -> Just (rest,x))
 
 {- Some examples, showing how it is used in an infix position to parse
    either an 'a' or a 'b' at the start of the input:
 
-      > runParser (parseLiteralChar 'a' `orElse` parseLiteralChar 'b') "abc"
+      > runParser (isChar 'a' `orElse` isChar 'b') "abc"
       Just ("bc", ())
-      > runParser (parseLiteralChar 'a' `orElse` parseLiteralChar 'b') "bca"
+      > runParser (isChar 'a' `orElse` isChar 'b') "bca"
       Just ("ca", ())
-      > runParser (parseLiteralChar 'a' `orElse` parseLiteralChar 'b') "cab"
+      > runParser (isChar 'a' `orElse` isChar 'b') "cab"
       Nothing
 
    We can also see the fail-and-try-the-other-one behaviour directly
    if we try 'failParse' or else something:
 
-      > runParser (failParse `orElse` parseLiteralChar 'a') "abc"
+      > runParser (failParse `orElse` isChar 'a') "abc"
       Just ("bc", ())
 
-
-   EXERCISE: For the 'Monad' instance for 'Parser', I said that it is
-     a combination of 'Maybe' (for simulating exceptions), and 'State'
-     (for simulating mutable state). So you could also do parsers in a
-     language like Java that has built-in state and exceptions. (Try
-     it!  use an instance field to keep the current input in.) What is
-     different about the 'orElse' function? What facility would you
-     need in Java to make it work?
 
    With the ability to try one parser and fall back to another if it
    fails, we can write parsers that are built from several
@@ -885,10 +872,10 @@ orElse p1 p2 =
 
 parseBool :: Parser Bool
 parseBool =
-  do parseLiteral "True"
+  do isString "True"
      return True
   `orElse`
-  do parseLiteral "False"
+  do isString "False"
      return False
 
 {- This has the same behaviour as 'parseBool_v2' and 'parseBool_v3' we
@@ -911,19 +898,19 @@ parseBool =
    parser built from 'orElse' will greedily match "Four", and never
    let the other parser have a go: -}
 
-orderedDemo :: Parser String
-orderedDemo =
-  do parseLiteral "for"
+orderedChoiceDemo :: Parser String
+orderedChoiceDemo =
+  do isString "for"
      return "the keyword 'for'"
   `orElse`
-  do parseLiteral "forty"
+  do isString "forty"
      return "the number 40"
 
 {- We can see this behaviour in some examples:
 
-     > runParser orderedDemo "for"
+     > runParser orderedChoiceDemo "for"
      Just ("","the keyword 'for'")
-     > runParser orderedDemo "forty"
+     > runParser orderedChoiceDemo "forty"
      Just ("ty","the keyword 'for'")
 
    On the input "forty", the first parser for "for" matches, and then
@@ -940,7 +927,7 @@ orderedDemo =
 {- We now have the following basic 'Parser's and ways of combining
    them:
 
-     1. The 'parseChar' 'Parser' for parsing single characters.
+     1. The 'char' 'Parser' for parsing single characters.
 
      2. The monad interface 'return' and '>>=' for parsers that do
         nothing and sequence two parsers.
@@ -950,9 +937,9 @@ orderedDemo =
      4. The 'orElse' parser that tries one parser, and if that fails
         tries another.
 
-   With these basic parsers, we have built 'parseLiteral' that
-   recognises literal strings. And we can now go on to build more
-   useful parsers on top of these.
+   With these basic parsers, we have built 'isString' that recognises
+   literal strings. And we can now go on to build more useful parsers
+   on top of these.
 
    With these basic functions, we no longer have to write anything
    involving 'MkParser' directly. All the other parsers we will write
@@ -965,7 +952,7 @@ orderedDemo =
 
 zeroOrMore :: Parser a -> Parser [a]
 zeroOrMore p =
-  do x <- p
+  do x  <- p
      xs <- zeroOrMore p
      return (x:xs)
   `orElse`
@@ -973,9 +960,9 @@ zeroOrMore p =
 
 {- Some examples:
 
-     > runParser (zeroOrMore (parseLiteralChar 'a')) "aaaa"
+     > runParser (zeroOrMore (isChar 'a')) "aaaa"
      Just ("",[(),(),(),()])
-     > runParser (zeroOrMore (parseLiteralChar 'a')) "aaaabb"
+     > runParser (zeroOrMore (isChar 'a')) "aaaabb"
      Just ("bb",[(),(),(),()])
      > runParser (zeroOrMore parseBool) "aaaabb"
      Just ("aaaabb",[])
@@ -1012,12 +999,11 @@ twoBoolLists =
       Just ("aaa",([],[]))
 -}
 
-{- Example: Parsing numbers
+{-     Part 8.6 Parsing numbers
 
-   We'll end this lecture with a practical example of using
-   'Parser's. Parsing numbers from a decimal representation in a text
-   file to actual 'Int's is a common operation for reading many kinds
-   of configuration files or programming languages.
+   Parsing numbers from a decimal representation in a text file to
+   actual 'Int's is a common operation for reading many kinds of
+   configuration files or programming languages.
 
    Let's start by defining a 'Parser' for reading individual
    digits. It is useful to know that there are two helpful functions
@@ -1029,12 +1015,12 @@ twoBoolLists =
      - 'digitToInt :: Char -> Int' that returns the numerical
        value of a digit character.
 
-   Putting these together with 'parseChar' and 'failParse', we get the
+   Putting these together with 'char' and 'failParse', we get the
    following parser that recognises individual digits and converts
    them to integers in the range 0..9: -}
 
 parseDigit :: Parser Int
-parseDigit = do c <- parseChar
+parseDigit = do c <- char
                 if isDigit c then
                   return (digitToInt c)
                 else
@@ -1092,7 +1078,7 @@ parsePositiveNumber =
   it doesn't: -}
 
 parseSign :: Parser Int
-parseSign = do parseLiteralChar '-'
+parseSign = do isChar '-'
                return (-1)
             `orElse`
             do return 1
@@ -1100,34 +1086,34 @@ parseSign = do parseLiteralChar '-'
 {- Now we put 'parseSign' and 'parsePositiveNumber' together to parse
    'Int's: -}
 
-parseInt :: Parser Int
-parseInt = do sign <- parseSign
-              num  <- parsePositiveNumber
-              return (sign * num)
+number :: Parser Int
+number = do sign <- parseSign
+            num  <- parsePositiveNumber
+            return (sign * num)
 
 {- Some tests:
 
-       > runParser parseInt "100"
+       > runParser number "100"
        Just ("",100)
-       > runParser parseInt "1000"
+       > runParser number "1000"
        Just ("",1000)
-       > runParser parseInt "1001"
+       > runParser number "1001"
        Just ("",1001)
-       > runParser parseInt "1001aaa"
+       > runParser number "1001aaa"
        Just ("aaa",1001)
-       > runParser parseInt "-50"
+       > runParser number "-50"
        Just ("",-50)
-       > runParser parseInt "-30"
+       > runParser number "-30"
        Just ("",-30)
-       > runParser parseInt "- 30"
+       > runParser number "- 30"
        Nothing
-       > runParser parseInt "--30"
+       > runParser number "--30"
        Nothing
 -}
 
-{-    Part 8.7 : PARSING STRING LITERALS
+{-    Part 8.7 : PARSING QUOTED STRINGS
 
-   Let's do a more complex example: writing a parser for string
+   Let's do a more complex example: writing a parser for quoted string
    literals like they appear in most programming languages:
 
          "hello, I'm a string literal"
@@ -1151,12 +1137,12 @@ parseInt = do sign <- parseSign
    Here is the parser for individual characters, which implements the
    scheme above: -}
 
-parseStringChar :: Parser Char
-parseStringChar =
-  do c <- parseChar
+stringChar :: Parser Char
+stringChar =
+  do c <- char
      case c of
        '"'  -> failParse
-       '\\' -> do c <- parseChar
+       '\\' -> do c <- char
                   -- FIXME: this should be more sophisticated
                   -- see the JSON RFC
                   return c
@@ -1183,38 +1169,38 @@ parseStringChar =
    parser will stop reading when it gets to the closing '"'. The code
    that implements this is as follows: -}
 
-parseStringLiteral :: Parser String
-parseStringLiteral =
-  do parseLiteralChar '"'
-     cs <- zeroOrMore parseStringChar
-     parseLiteralChar '"'
+quotedString :: Parser String
+quotedString =
+  do isChar '"'
+     cs <- zeroOrMore stringChar
+     isChar '"'
      return cs
 
 {- Some examples:
 
    1. Not a string literal:
 
-       > runParser parseStringLiteral "hello"
+       > runParser quotedString "hello"
        Nothing
 
    2. Missing a terminating '"':
 
-       > runParser parseStringLiteral "\"hello"
+       > runParser quotedString "\"hello"
        Nothing
 
    3. A complete string literal:
 
-       > runParser parseStringLiteral "\"hello\""
+       > runParser quotedString "\"hello\""
        Just ("","hello")
 
    4. A string literal that terminates with more stuff after it:
 
-       > runParser parseStringLiteral "\"hel\"lo\""
+       > runParser quotedString "\"hel\"lo\""
        Just ("lo\"","hel")
 
    5. A string literal with an escaped character:
 
-       > runParser parseStringLiteral "\"hel\\\"lo\""
+       > runParser quotedString "\"hel\\\"lo\""
        Just ("","hel\"lo")
 -}
 
@@ -1296,10 +1282,10 @@ data JSON
 
 parseJSONBool :: Parser Bool
 parseJSONBool =
-  do parseLiteral "true"
+  do isString "true"
      return True
   `orElse`
-  do parseLiteral "false"
+  do isString "false"
      return False
 
 {- The other simple (in the sense of not being made of multiple bits)
@@ -1307,7 +1293,7 @@ parseJSONBool =
 
 parseNull :: Parser ()
 parseNull =
-  do parseLiteral "null"
+  do isString "null"
      return ()
 
 {- The remaining kinds of JSON value to parse are arrays:
@@ -1331,7 +1317,7 @@ parseNull =
 
 parseSpace :: Parser ()
 parseSpace =
-  do c <- parseChar
+  do c <- char
      if isSpace c then return () else failParse
 
 {- Arbitrary whitespace is zero or spaces: -}
@@ -1376,29 +1362,29 @@ sepBy separator p =
 {- To test it, here's a parser for commas: -}
 
 comma :: Parser ()
-comma = parseLiteralChar ','
+comma = isChar ','
 
 {- Let's try some examples, 'Int's separated by commas:
 
    1. Some items:
 
-         > runParser (sepBy comma parseInt) "1,2,3,4"
+         > runParser (sepBy comma number) "1,2,3,4"
          Just ("",[1,2,3,4])
 
    2. No items:
 
-         > runParser (sepBy comma parseInt) ""
+         > runParser (sepBy comma number) ""
          Just ("",[])
 
    3. Some items with trailing stuff:
 
-         > runParser (sepBy comma parseInt) "1,2,3,4xyz"
+         > runParser (sepBy comma number) "1,2,3,4xyz"
          Just ("xyz",[1,2,3,4])
 
    So far as expected, but JSON syntax also allows for spaces, which
    our parser doesn't:
 
-         > runParser (sepBy comma parseInt) "1 , 2, 3, 4"
+         > runParser (sepBy comma number) "1 , 2, 3, 4"
          Just (" , 2, 3, 4",[1])
 
    It recognised the '1', but the space between that and the comma
@@ -1407,18 +1393,18 @@ comma = parseLiteralChar ','
 
    How to fix this? We could modify 'sepBy' to allow extra whitespace,
    but this would prevent us from using it in situations where extra
-   whitespace is disallowed. Another way to fix it is to alter the
+   whitespace isn't allowed. Another way to fix it is to alter the
    separator parser to allow whitespace before and after the comma: -}
 
 spacedComma :: Parser ()
 spacedComma =
   do parseWhitespace
-     parseLiteralChar ','
+     isChar ','
      parseWhitespace
 
 {- Using 'spacedComma' as a separator, we get the expected behaviour:
 
-      > runParser (sepBy spacedComma parseInt) "1 , 2, 3, 4"
+      > runParser (sepBy spacedComma number) "1 , 2, 3, 4"
       Just ("",[1,2,3,4])
 
    JSON arrays are comma separated lists of values that are also
@@ -1430,43 +1416,43 @@ spacedComma =
 
 parseList :: Parser a -> Parser [a]
 parseList p =
-  do parseLiteral "["
+  do isChar '['
      parseWhitespace
      xs <- sepBy spacedComma p
      parseWhitespace
-     parseLiteral "]"
+     isChar ']'
      return xs
 
 {- Some examples, for testing:
 
    1. Parsing a list of boolean:
 
-        > runParser (parseList parseInt) "[ 1, 2, 3, 4 ]"
+        > runParser (parseList number) "[ 1, 2, 3, 4 ]"
         Just ("",[1,2,3,4])
 
    2. Trailing commas are rejected:
 
-        > runParser (parseList parseInt) "[ 1, 2, 3, 4,  ]"
+        > runParser (parseList number) "[ 1, 2, 3, 4,  ]"
         Nothing
 
    3. Empty lists:
 
-        > runParser (parseList parseInt) "[ ]"
+        > runParser (parseList number) "[ ]"
         Just ("",[])
 
    4. Lists without spaces:
 
-        > runParser (parseList parseInt) "[1,2,3,4]"
+        > runParser (parseList number) "[1,2,3,4]"
         Just ("",[1,2,3,4])
 
    5. List with one item:
 
-        > runParser (parseList parseInt) "[1]"
+        > runParser (parseList number) "[1]"
         Just ("",[1])
 
    6. Parsing a list of 'Int's, but giving it a boolean:
 
-        > runParser (parseList parseInt) "[true]"
+        > runParser (parseList number) "[true]"
         Nothing
 
    7. Parsing lists of booleans:
@@ -1490,9 +1476,9 @@ parseList p =
 
 parseObjectItem :: Parser a -> Parser (String, a)
 parseObjectItem p =
-  do fieldname <- parseStringLiteral
+  do fieldname <- quotedString
      parseWhitespace
-     parseLiteralChar ':'
+     isChar ':'
      parseWhitespace
      value <- p
      return (fieldname, value)
@@ -1501,24 +1487,24 @@ parseObjectItem p =
 
    1. Successful object items:
 
-         > runParser (parseObjectItem parseInt) "\"Aberdeen\" : 5"
+         > runParser (parseObjectItem number) "\"Aberdeen\" : 5"
          Just ("",("Aberdeen",5))
-         > runParser (parseObjectItem parseInt) "\"Celtic\" : 0"
+         > runParser (parseObjectItem number) "\"Celtic\" : 0"
          Just ("",("Celtic",0))
 
    2. Fieldnames must have quotes:
 
-         > runParser (parseObjectItem parseInt) "Celtic : 0"
+         > runParser (parseObjectItem number) "Celtic : 0"
          Nothing
 
    3. The colon is required:
 
-         > runParser (parseObjectItem parseInt) "\"Celtic\" 0"
+         > runParser (parseObjectItem number) "\"Celtic\" 0"
          Nothing
 
    4. But we don't need all the whitespace:
 
-         > runParser (parseObjectItem parseInt) "\"Aberdeen\":5"
+         > runParser (parseObjectItem number) "\"Aberdeen\":5"
          Just ("",("Aberdeen",5))
 
    5. We can change what the parser used for the value is:
@@ -1532,16 +1518,16 @@ parseObjectItem p =
 
 parseObject :: Parser a -> Parser [(String,a)]
 parseObject p =
-  do parseLiteral "{"
+  do isString "{"
      parseWhitespace
      xs <- sepBy spacedComma (parseObjectItem p)
      parseWhitespace
-     parseLiteral "}"
+     isString "}"
      return xs
 
 {- A quick test:
 
-     > runParser (parseObject parseInt) "{ \"Aberdeen\": 5, \"Celtic\" : 0}"
+     > runParser (parseObject number) "{ \"Aberdeen\": 5, \"Celtic\" : 0}"
      Just ("",[("Aberdeen",5),("Celtic",0)])
 
 
@@ -1553,10 +1539,10 @@ parseObject p =
 
 parseJSON :: Parser JSON
 parseJSON =
-  do num <- parseInt
+  do num <- number
      return (Number num)
   `orElse`
-  do s <- parseStringLiteral
+  do s <- quotedString
      return (String s)
   `orElse`
   do b <- parseJSONBool
@@ -1584,7 +1570,7 @@ testJSONString =
    \}"
 
 {- Let's run it through the parser we just wrote (formatted for
-   readbability):
+   readability):
 
    > runParser parseJSON testJSONString
    Just ("",Object [("f",Number 1),
@@ -1637,3 +1623,13 @@ instance Functor Parser where
 {- 2. Write a function 'withOutputFile' that does what 'withInputFile'
    does but for output. Use it to write an exception safe version of
    'writeToFile'. -}
+
+{- 3. Rewrite 'isString' using 'for_'. -}
+
+{- 4. For the 'Monad' instance for 'Parser', I said that it is a
+      combination of 'Maybe' (for simulating exceptions), and 'State'
+      (for simulating mutable state). So you could also do parsers in
+      a language like Java that has built-in state and
+      exceptions. (Try it!  use an instance field to keep the current
+      input in.) What is different about the 'orElse' function? What
+      facility would you need in Java to make it work? -}
