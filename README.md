@@ -62,3 +62,4 @@ when they are released. Check MyPlace for dates.
 
 - [Exercise 1 : First-order Programming](exercises/Ex1.hs) : Was released Thursday 24th September. The deadline is *Thursday 15th October*. Fill your answers in and submit by uploading the `Ex1.hs` file to MyPlace.
 - [Exercise 2 : Higher-order Programming](exercises/Ex2.hs) : Was released Wednesday 14th October. The deadline is *Thursday 29th October*. Fill your answers in and submit by uploading the `Ex2.hs` file to MyPlace.
+- [Exercise 3 : Programming Project](exercises/Ex3.hs) : Was released Thursday 5th November. The deadline is *Thursday 3rd December*. Fill your answers in and submit by uploading the files to MyPlace.
