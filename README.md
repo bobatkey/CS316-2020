@@ -51,8 +51,8 @@ that we will go through in the tutorial sessions.
 - [Week 5](lecture-notes/Week05.hs) : Classes of Types
 - [Week 6](lecture-notes/Week06.hs) : Simulating Side Effects
 - [Week 7](lecture-notes/Week07.hs) : Monads
-- [Week 8](lecture-notes/Week08.hs) : Parser Combinators
-- [Week 9](lecture-notes/Week09.hs) : Real side effects
+- [Week 8](lecture-notes/Week08.hs) : Real Input/Output and Parser Combinators
+- [Week 9](lecture-notes/Week09.hs) : TBD
 - [Week 10](lecture-notes/Week10.hs) : Infinite Data and Processes
 
 ## Coursework Assignments
