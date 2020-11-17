@@ -61,4 +61,5 @@ library
                        Week10
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5,
-                       split == 0.2.3.3
+                       split == 0.2.3.3,
+                       HTTP >= 4000.3.14
