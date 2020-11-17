@@ -5,7 +5,7 @@ import           Result
 import           Data.Char (isSpace, isLower, isUpper, isNumber,
                             digitToInt, isAlpha, isAlphaNum)
 
-{- WThis is the code for the parser combinators you should use to
+{- This is the code for the parser combinators you should use to
    implement your parsers. You may want to consult this code to help
    you write your parser, but do not modify it. -}
 
