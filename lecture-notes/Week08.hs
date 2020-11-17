@@ -779,7 +779,7 @@ isChar expected =
    strings of characters. We already have a function that performs
    some action for every element of a list: 'mapM_' from Lecture
    12. Using this, we get a parser that takes a specific 'String', and
-   suceeds only if that string is at the start of the input: -}
+   succeeds only if that string is at the start of the input: -}
 
 isString :: String -> Parser ()
 isString = mapM_ isChar
