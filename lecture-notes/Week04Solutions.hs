@@ -1,6 +1,6 @@
 {-# LANGUAGE ParallelListComp #-}
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
-module Week04 where
+module Week04Solutions where
 
 import Prelude hiding (foldr, foldl, Maybe (..), Left, Right, filter, zip, map, concat)
 import Data.List.Split (splitOn)

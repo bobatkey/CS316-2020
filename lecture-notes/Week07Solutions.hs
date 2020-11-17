@@ -1,7 +1,7 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE RebindableSyntax #-}
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
-module Week07 where
+module Week07Solutions where
 
 import Prelude hiding ( Monad (..)
                       , Applicative (..)

@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
-module Week05 where
+module Week05Solutions where
 
 import Prelude hiding (Left, Right, Semigroup (..), Foldable (..), Functor (..), Monoid (..), Maybe (..))
 import Data.Char
