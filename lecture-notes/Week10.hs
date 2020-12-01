@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fwarn-incomplete-patterns #-}
 module Week10 where
 
 import Prelude hiding (const, take, iterate)
